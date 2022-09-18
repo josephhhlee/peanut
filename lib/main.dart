@@ -33,38 +33,41 @@ void main({env = "dev"}) async {
   );
 }
 
-class MyApp extends StatelessWidget with WidgetsBindingObserver {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.detached || state == AppLifecycleState.inactive) await DataStore().secureStorage.clearCache();
+    if (state != AppLifecycleState.resumed) {
+      NetworkService.listener?.pause();
+      MaintenanceService.listener?.pause();
+    } else {
+      NetworkService.listener?.resume();
+      MaintenanceService.listener?.resume();
+    }
+  }
+
+  @override
+  void initState() {
+    _init();
+    super.initState();
+  }
 
   Future<void> _init() async {
     Navigation.init();
-    await _initListeners();
-  }
-
-  Future<void> _initListeners({excludeState = false}) async {
-    void stateListener(String trigger) =>
-        trigger == "start" ? WidgetsBinding.instance.addObserver(this) : WidgetsBinding.instance.removeObserver(this);
-
-    if (!excludeState) stateListener("start");
+    WidgetsBinding.instance.addObserver(this);
     await NetworkService.init();
     MaintenanceService.init();
   }
 
   @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.detached || state == AppLifecycleState.inactive) await DataStore().secureStorage.clearCache();
-    if (state != AppLifecycleState.resumed) {
-      NetworkService.listener?.cancel();
-      MaintenanceService.listener?.cancel();
-    } else {
-      _initListeners(excludeState: true);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    _init();
-
     return MaterialApp.router(
       title: "Peanut",
       theme: PeanutTheme.defaultTheme(),

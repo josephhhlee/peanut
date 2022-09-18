@@ -4,25 +4,22 @@ import 'package:flutter/services.dart';
 import 'package:peanut/App/configs.dart';
 import 'dart:developer';
 import 'package:peanut/App/router.dart';
-import 'package:peanut/Services/authentication_service.dart';
-import 'package:peanut/Ui/Entrance/login.dart';
-import 'package:peanut/Ui/General/no_network.dart';
-import 'package:peanut/Ui/General/page_not_found.dart';
-import 'package:peanut/Ui/General/splash_screen.dart';
+import 'package:peanut/Ui/General/no_network_page.dart';
+import 'package:peanut/Ui/General/page_not_found_page.dart';
+import 'package:peanut/Ui/General/splash_screen_page.dart';
 
 class NetworkService {
   static final Connectivity _connectivity = Connectivity();
-  static late StreamSubscription<ConnectivityResult>? listener;
-  static late Uri? _pageToResume;
-  static late Timer? _networkTimer;
+  static late final StreamSubscription<ConnectivityResult>? listener;
+  static Uri? _pageToResume;
+  static Timer? _networkTimer;
 
   static Future<void> init() async {
     await _initConnection();
     _networkListener();
   }
 
-  static StreamSubscription<void> _networkListener() =>
-      listener = _connectivity.onConnectivityChanged.listen((result) async => await _updateConnectionStatus(result));
+  static StreamSubscription<void> _networkListener() => listener = _connectivity.onConnectivityChanged.listen((_updateConnectionStatus));
 
   static Future<void> _initConnection() async {
     try {
@@ -33,33 +30,28 @@ class NetworkService {
     }
   }
 
-  static Future<void> _updateConnectionStatus(ConnectivityResult result) async {
-    Future<bool> isLoggedIn() async => await AuthenticationService.checkForLogin();
-
+  static void _updateConnectionStatus(ConnectivityResult result) {
     void handleNoNetwork() {
       if (_networkTimer!.isActive || result != ConnectivityResult.none) return;
       Configs().connected = false;
-      Navigation.navigator.routeManager.clearAndPush(Uri.parse(NoNetworkPage.routeName));
+      Navigation.navigator?.routeManager.clearAndPush(Uri.parse(NoNetworkPage.routeName));
     }
 
     if (result == ConnectivityResult.none) {
-      _pageToResume = Navigation.navigator.currentConfiguration!;
+      _pageToResume = Navigation.navigator?.currentConfiguration!;
       _networkTimer = Timer(const Duration(seconds: 2), handleNoNetwork);
     } else {
       Configs().connected = true;
       _networkTimer?.cancel();
 
       if (_pageToResume != null) {
-        var nonResumablePage = _pageToResume!.path.isEmpty ||
-            _pageToResume!.path == PageNotFoundPage.routeName ||
-            _pageToResume!.path == SplashScreenPage.routeName ||
-            _pageToResume!.path == NoNetworkPage.routeName;
+        var nonResumablePage =
+            _pageToResume!.path.isEmpty || _pageToResume!.path == PageNotFoundPage.routeName || _pageToResume!.path == NoNetworkPage.routeName;
 
         if (nonResumablePage) {
-          _pageToResume = Uri.parse(await isLoggedIn() ? HomePage.routeName : LoginPage.routeName);
-          Navigation.navigator.routeManager.clearAndPush(_pageToResume!);
+          Navigation.navigator?.routeManager.clearAndPush(Uri.parse(SplashScreenPage.routeName));
         } else {
-          Navigation.navigator.routeManager.clearAndPushAll([Uri.parse(HomePage.routeName), _pageToResume!]);
+          // Navigation.navigator.routeManager.clearAndPushAll([Uri.parse(HomePage.routeName), _pageToResume!]);
         }
         _pageToResume = null;
       }

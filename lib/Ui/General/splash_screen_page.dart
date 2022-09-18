@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:peanut/App/theme.dart';
 
 class SplashScreenPage extends StatelessWidget {
-  static const routeName = "/~";
+  static const routeName = "/";
 
   const SplashScreenPage({super.key});
 
@@ -17,11 +17,11 @@ class SplashScreenPage extends StatelessWidget {
       width: screenSize.width,
       alignment: Alignment.center,
       color: PeanutTheme.white,
-      // child: Image.asset(
-      //   "assets/splashscreen.png",
-      //   width: size,
-      //   height: size,
-      // ),
+      child: Image.asset(
+        "assets/entrance_background.jpg",
+        width: size,
+        height: size,
+      ),
     );
   }
 }

@@ -27,7 +27,7 @@ class PeanutTheme {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: const AssetImage("entrance_background.jpg"),
+            image: const AssetImage("assets/entrance_background.jpg"),
             fit: BoxFit.cover,
             alignment: Alignment.center,
             colorFilter: ColorFilter.mode(Colors.white.withOpacity(0.9), BlendMode.lighten),

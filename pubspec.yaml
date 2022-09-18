@@ -53,6 +53,7 @@ dependencies:
   google_sign_in: ^5.4.1
   fluttertoast: ^8.0.9
   sign_in_with_apple: ^4.1.0
+  cached_network_image: ^3.2.2
 
 dev_dependencies:
   flutter_test:

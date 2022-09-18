@@ -1,13 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
-import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
-import 'package:peanut/Ui/Entrance/login.dart';
-import 'package:peanut/Utils/common_utils.dart';
+import 'package:peanut/Ui/Entrance/login_page.dart';
 import 'dart:developer';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -17,7 +14,7 @@ class AuthenticationService {
   static Future<bool> checkForLogin({bool redirect = false}) async {
     Future<bool> process() async {
       await logout();
-      if (redirect) Navigation.navigator.routeManager.clearAndPush(Uri.parse(LoginPage.routeName));
+      if (redirect) Navigation.navigator?.routeManager.clearAndPush(Uri.parse(LoginPage.routeName));
       return false;
     }
 

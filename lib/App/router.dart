@@ -2,11 +2,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/Services/authentication_service.dart';
-import 'package:peanut/Ui/Entrance/login.dart';
-import 'package:peanut/Ui/General/maintenance.dart';
-import 'package:peanut/Ui/General/no_network.dart';
-import 'package:peanut/Ui/General/page_not_found.dart';
-import 'package:peanut/Ui/General/splash_screen.dart';
+import 'package:peanut/Ui/Entrance/login_page.dart';
+import 'package:peanut/Ui/General/maintenance_page.dart';
+import 'package:peanut/Ui/General/no_network_page.dart';
+import 'package:peanut/Ui/General/page_not_found_page.dart';
+import 'package:peanut/Ui/General/splash_screen_page.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 class InformationParser extends VxInformationParser {
@@ -40,7 +40,7 @@ class PeanutRouter {
 }
 
 class Navigation {
-  static late VxNavigator navigator;
+  static VxNavigator? navigator;
 
   static init() => navigator =
       VxNavigator(routes: PeanutRouter.routes(), observers: [Observer()], notFoundPage: (_, __) => const MaterialPage(child: PageNotFoundPage()));
@@ -58,8 +58,8 @@ class Navigation {
   static void pop(BuildContext context, {dynamic result}) => context.vxNav.pop();
 
   static void popUntil(BuildContext context, String path) {
-    while (navigator.currentConfiguration?.path != path) {
-      var currentPage = navigator.currentConfiguration?.path;
+    while (navigator?.currentConfiguration?.path != path) {
+      var currentPage = navigator?.currentConfiguration?.path;
       // if (currentPage == "/" || currentPage == HomePage.routeName || currentPage == LoginPage.routeName) break;
       pop(context);
     }
@@ -78,10 +78,10 @@ class Observer extends VxObserver {
     final configs = Configs();
     if (!configs.connected) {
       if (route.path == NoNetworkPage.routeName) return;
-      return Navigation.navigator.routeManager.clearAndPush(Uri.parse(NoNetworkPage.routeName));
+      return Navigation.navigator?.routeManager.clearAndPush(Uri.parse(NoNetworkPage.routeName));
     } else if (configs.maintenance) {
       if (route.path == MaintenancePage.routeName) return;
-      return Navigation.navigator.routeManager.clearAndPush(Uri.parse(MaintenancePage.routeName));
+      return Navigation.navigator?.routeManager.clearAndPush(Uri.parse(MaintenancePage.routeName));
     }
   }
 }

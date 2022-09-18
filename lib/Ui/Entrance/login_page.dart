@@ -5,6 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
+import 'package:peanut/Ui/Entrance/onboarding.dart';
+import 'package:peanut/Ui/General/splash_screen_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
 class LoginPage extends StatefulWidget {
@@ -48,35 +50,40 @@ class _LoginPageState extends State<LoginPage> {
         }
         return true;
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: PeanutTheme.transparent,
-        body: PeanutTheme.background(
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _backButton(),
-              Flexible(
-                child: Center(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onPanDown: (_) {
-                      FocusScope.of(context).unfocus();
-                    },
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Container(
-                        width: double.infinity,
-                        alignment: Alignment.center,
-                        child: _showLoginMenu(),
+      child: Stack(
+        children: [
+          const Onboarding(),
+          Scaffold(
+            resizeToAvoidBottomInset: false,
+            backgroundColor: PeanutTheme.transparent,
+            body: PeanutTheme.background(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _backButton(),
+                  Flexible(
+                    child: Center(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanDown: (_) {
+                          FocusScope.of(context).unfocus();
+                        },
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Container(
+                            width: double.infinity,
+                            alignment: Alignment.center,
+                            child: _showLoginMenu(),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -278,7 +285,7 @@ class _LoginPageState extends State<LoginPage> {
               });
             } else {
               await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text)
-                  .whenComplete(() => Navigation.push(context, HomePage.routeName, clear: true));
+                  .whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
             }
           } catch (e) {
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
@@ -347,7 +354,7 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         try {
-          await login().whenComplete(() => Navigation.push(context, HomePage.routeName));
+          await login().whenComplete(() => Navigation.push(context, SplashScreenPage.routeName));
         } catch (e) {
           CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
         }
@@ -408,7 +415,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         GestureDetector(
           onTap: () async {
-            Navigation.push(context, SignUpPage.routeName);
+            // Navigation.push(context, SignUpPage.routeName);
             await Future.delayed(const Duration(milliseconds: 500), () => _formKey.currentState?.reset());
           },
           child: Text(
