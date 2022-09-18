@@ -1,5 +1,5 @@
 name: peanut
-description: A new Flutter project.
+description: Join Peanut To Earn Peanuts.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -37,6 +37,23 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
 
+  # FireBase Packages
+  firebase_core: ^1.22.0
+  cloud_firestore: ^3.4.7
+  firebase_analytics: ^9.3.4
+  firebase_remote_config: ^2.0.17
+  firebase_auth: ^3.8.0
+
+  shared_preferences: ^2.0.15
+  provider: ^6.0.3
+  flutter_secure_storage: ^6.0.0
+  velocity_x: ^3.5.1
+  connectivity_plus: ^2.3.6+1
+  font_awesome_flutter: ^9.2.0
+  google_sign_in: ^5.4.1
+  fluttertoast: ^8.0.9
+  sign_in_with_apple: ^4.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -60,9 +77,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/entrance_background.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
