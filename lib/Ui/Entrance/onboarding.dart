@@ -59,7 +59,7 @@ class _OnboardingState extends State<Onboarding> {
         width: screenSize.width,
         height: screenSize.height,
         color: PeanutTheme.black.withOpacity(0.5),
-        child: Card(child: _pageBuilder(screenSize)),
+        child: _pageBuilder(screenSize),
       ),
     );
   }
@@ -67,8 +67,6 @@ class _OnboardingState extends State<Onboarding> {
   Widget _pageBuilder(Size screenSize) => Material(
         type: MaterialType.transparency,
         child: Container(
-          width: screenSize.width,
-          height: screenSize.height,
           margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05, vertical: screenSize.height * 0.05),
           decoration: BoxDecoration(
             color: PeanutTheme.white,
@@ -181,11 +179,11 @@ class _OnboardingState extends State<Onboarding> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              image(),
               Flexible(
                 flex: 3,
-                child: SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                child: image(),
               ),
+              const SizedBox(height: 20),
               indicator(),
               const SizedBox(height: 15),
               theTitle(),

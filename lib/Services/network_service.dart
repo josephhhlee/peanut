@@ -6,7 +6,7 @@ import 'dart:developer';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
-import 'package:peanut/Ui/General/splash_screen_page.dart';
+import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 
 class NetworkService {
   static final Connectivity _connectivity = Connectivity();

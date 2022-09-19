@@ -49,7 +49,7 @@ dependencies:
   flutter_secure_storage: ^6.0.0
   velocity_x: ^3.5.1
   connectivity_plus: ^2.3.6+1
-  font_awesome_flutter: ^9.2.0
+  font_awesome_flutter: ^10.2.1
   google_sign_in: ^5.4.1
   fluttertoast: ^8.0.9
   sign_in_with_apple: ^4.1.0

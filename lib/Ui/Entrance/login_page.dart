@@ -6,7 +6,7 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Entrance/onboarding.dart';
-import 'package:peanut/Ui/General/splash_screen_page.dart';
+import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
 class LoginPage extends StatefulWidget {
@@ -39,20 +39,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async {
-        if (_isResetPassword) {
-          setState(() {
-            _formKey.currentState?.reset();
-            _isResetPassword = false;
-            _resetEmail.clear();
-          });
-          return false;
-        }
-        return true;
-      },
+      onWillPop: () async => false,
       child: Stack(
         children: [
-          const Onboarding(),
           Scaffold(
             resizeToAvoidBottomInset: false,
             backgroundColor: PeanutTheme.transparent,
@@ -83,29 +72,30 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+          const Onboarding(),
         ],
       ),
     );
   }
 
   Widget _backButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, left: 20),
-      child: IconButton(
-        onPressed: () {
-          if (_isResetPassword) {
-            setState(() {
-              _formKey.currentState?.reset();
-              _isResetPassword = false;
-              _resetEmail.clear();
-            });
-            return;
-          }
-          Navigation.pop(context);
-        },
-        icon: const Icon(
-          Icons.arrow_back_rounded,
-          size: 35.0,
+    return Visibility(
+      visible: _isResetPassword,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20, left: 20),
+        child: IconButton(
+          onPressed: () => setState(() {
+            _formKey.currentState?.reset();
+            _isResetPassword = false;
+            _resetEmail.clear();
+          }),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            size: 35.0,
+          ),
         ),
       ),
     );
@@ -127,25 +117,23 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: _isResetPassword
               ? [
-                  _title("Password Reset", "Enter registered email to continue"),
-                  const SizedBox(height: 55),
+                  _title("Password Reset", "Enter Registered Email to Continue", displaySignUp: false),
+                  const SizedBox(height: 45),
                   _textForm("Email", _resetEmail, _resetFocusNode),
                   const SizedBox(height: 45),
                   _mainButton("reset"),
                 ]
               : [
-                  _title("Login", "Please sign in to continue"),
-                  const SizedBox(height: 55),
+                  _title("Login", "Sign In to Continue"),
+                  const SizedBox(height: 45),
                   _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
                   _or(),
                   _textForm("Email", _emailController, _emailFocusNode),
                   const SizedBox(height: 20),
                   _textForm("Password", _passwordController, _passwordFocusNode),
                   const SizedBox(height: 45),
-                  _mainButton("login"),
+                  _mainButton("sign in"),
                   _forgotPW(),
-                  const SizedBox(height: 35),
-                  _dontHaveAcc(),
                 ],
         ),
       ),
@@ -176,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _title(String header, String desc) {
+  Widget _title(String header, String desc, {bool displaySignUp = true}) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Column(
@@ -190,6 +178,7 @@ class _LoginPageState extends State<LoginPage> {
             desc,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
+          if (displaySignUp) _dontHaveAcc(),
         ],
       ),
     );
@@ -315,26 +304,22 @@ class _LoginPageState extends State<LoginPage> {
   Widget _otherSigninOptions(bool displayInRow, double width) {
     width = !displayInRow ? width : width;
 
+    var widgets = [
+      _otherSignin(FontAwesomeIcons.google, "google", width),
+      Visibility(
+        visible: !Platform.isIOS,
+        child: _otherSignin(FontAwesomeIcons.apple, "apple", width),
+      ),
+    ];
+
     return displayInRow
         ? Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _otherSignin(FontAwesomeIcons.google, "google", width),
-              Visibility(
-                visible: !Platform.isIOS,
-                child: _otherSignin(FontAwesomeIcons.apple, "apple", width),
-              ),
-            ],
+            children: widgets,
           )
         : Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _otherSignin(FontAwesomeIcons.google, "google", width),
-              Visibility(
-                visible: Platform.isIOS,
-                child: _otherSignin(FontAwesomeIcons.apple, "apple", width),
-              ),
-            ],
+            children: widgets,
           );
   }
 
@@ -354,7 +339,9 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         try {
-          await login().whenComplete(() => Navigation.push(context, SplashScreenPage.routeName));
+          await login();
+          // ignore: use_build_context_synchronously
+          Navigation.push(context, SplashScreenPage.routeName);
         } catch (e) {
           CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
         }
@@ -373,18 +360,11 @@ class _LoginPageState extends State<LoginPage> {
         child: Row(
           children: [
             ClipRRect(
-              child: signInOption == "google"
-                  ? Image.asset(
-                      "assets/logos/google_light.png",
-                      package: "flutter_signin_button",
-                      fit: BoxFit.cover,
-                      width: 40,
-                    )
-                  : SizedBox(
-                      height: 25,
-                      width: 40,
-                      child: Icon(icon, size: 20, color: PeanutTheme.black),
-                    ),
+              child: SizedBox(
+                height: 25,
+                width: 40,
+                child: Icon(icon, size: 20, color: PeanutTheme.black),
+              ),
             ),
             const Expanded(
               child: Text(
@@ -402,32 +382,34 @@ class _LoginPageState extends State<LoginPage> {
   Widget _dontHaveAcc() {
     var textSize = 12.0;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Don't have account? ",
-          style: TextStyle(
-            fontSize: textSize,
-            color: PeanutTheme.almostBlack,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        GestureDetector(
-          onTap: () async {
-            // Navigation.push(context, SignUpPage.routeName);
-            await Future.delayed(const Duration(milliseconds: 500), () => _formKey.currentState?.reset());
-          },
-          child: Text(
-            "Sign up",
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
+      child: Row(
+        children: [
+          Text(
+            "Don't have account? ",
             style: TextStyle(
-              fontSize: textSize + 1,
+              fontSize: textSize,
+              color: PeanutTheme.almostBlack,
               fontWeight: FontWeight.bold,
-              decoration: TextDecoration.underline,
             ),
           ),
-        ),
-      ],
+          GestureDetector(
+            onTap: () async {
+              // Navigation.push(context, SignUpPage.routeName);
+              await Future.delayed(const Duration(milliseconds: 500), () => _formKey.currentState?.reset());
+            },
+            child: Text(
+              "Sign up",
+              style: TextStyle(
+                fontSize: textSize + 1,
+                fontWeight: FontWeight.bold,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

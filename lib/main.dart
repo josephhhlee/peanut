@@ -59,6 +59,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    NetworkService.listener?.cancel();
+    MaintenanceService.listener?.cancel();
+    super.dispose();
+  }
+
   Future<void> _init() async {
     Navigation.init();
     WidgetsBinding.instance.addObserver(this);

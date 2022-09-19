@@ -4,7 +4,7 @@ import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/General/maintenance_page.dart';
-import 'package:peanut/Ui/General/splash_screen_page.dart';
+import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 
 class MaintenanceService {
   static late final StreamSubscription<DocumentSnapshot>? listener;
