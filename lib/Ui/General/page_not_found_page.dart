@@ -9,21 +9,23 @@ class PageNotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            alignment: Alignment.center,
-            width: double.infinity,
-            child: _errorContent(context),
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        backgroundColor: PeanutTheme.transparent,
+        body: PeanutTheme.background(
+          Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: _content(context),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _errorContent(BuildContext context) {
+  Widget _content(BuildContext context) {
     return Container(
       width: double.infinity,
       alignment: Alignment.center,

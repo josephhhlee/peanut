@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:peanut/App/configs.dart';
 import 'dart:developer';
 import 'package:peanut/App/router.dart';
+import 'package:peanut/Ui/General/maintenance_page.dart';
 import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
@@ -45,13 +46,15 @@ class NetworkService {
       _networkTimer?.cancel();
 
       if (_pageToResume != null) {
-        var nonResumablePage =
-            _pageToResume!.path.isEmpty || _pageToResume!.path == PageNotFoundPage.routeName || _pageToResume!.path == NoNetworkPage.routeName;
+        var nonResumablePage = _pageToResume!.path.isEmpty ||
+            _pageToResume!.path == PageNotFoundPage.routeName ||
+            _pageToResume!.path == NoNetworkPage.routeName ||
+            _pageToResume!.path == MaintenancePage.routeName;
 
         if (nonResumablePage) {
           Navigation.navigator?.routeManager.clearAndPush(Uri.parse(SplashScreenPage.routeName));
         } else {
-          // Navigation.navigator.routeManager.clearAndPushAll([Uri.parse(HomePage.routeName), _pageToResume!]);
+          Navigation.navigator?.routeManager.clearAndPushAll([Uri.parse(SplashScreenPage.routeName), _pageToResume!]);
         }
         _pageToResume = null;
       }

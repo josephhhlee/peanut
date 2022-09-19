@@ -68,6 +68,7 @@ class _OnboardingState extends State<Onboarding> {
         type: MaterialType.transparency,
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.05, vertical: screenSize.height * 0.05),
+          clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
             color: PeanutTheme.white,
             borderRadius: BorderRadius.circular(15),
@@ -76,25 +77,23 @@ class _OnboardingState extends State<Onboarding> {
             controller: _pageController,
             itemCount: _details?.length,
             onPageChanged: (value) => setState(() => _currentPage = value),
-            itemBuilder: (_, index) => _contents(index),
+            itemBuilder: (_, index) => _contents(screenSize, index),
           ),
         ),
       );
 
-  Widget _contents(int index) {
+  Widget _contents(Size screenSize, int index) {
     final imageUrl = _details?[index]["image"] ?? "";
     final title = _details?[index]["title"] ?? "";
     final description = _details?[index]["desc"] ?? "";
     final pageAtEnd = index + 1 == _details?.length;
 
-    Widget image() => Expanded(
-          child: CachedNetworkImage(
-            imageUrl: imageUrl,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.contain,
-            errorWidget: (context, url, error) => const SizedBox.shrink(),
-          ),
+    Widget image() => CachedNetworkImage(
+          imageUrl: imageUrl,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.contain,
+          errorWidget: (context, url, error) => const SizedBox.shrink(),
         );
 
     Widget indicator() => Row(
@@ -123,14 +122,16 @@ class _OnboardingState extends State<Onboarding> {
           ),
         );
 
-    Widget theDescription() => Scrollbar(
-          thumbVisibility: true,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Text(
-              description,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: PeanutTheme.almostBlack),
+    Widget theDescription() => SizedBox(
+          height: screenSize.height * 0.2,
+          child: Scrollbar(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Text(
+                description,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: PeanutTheme.almostBlack),
+              ),
             ),
           ),
         );
@@ -158,8 +159,8 @@ class _OnboardingState extends State<Onboarding> {
         );
 
     Widget skip() => Positioned(
-          top: 0,
-          right: 0,
+          top: 10,
+          right: 10,
           child: GestureDetector(
             onTap: () async {
               await DataStore().pref.setBool(key, false);
@@ -172,33 +173,27 @@ class _OnboardingState extends State<Onboarding> {
           ),
         );
 
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Stack(
-        children: [
-          Column(
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
-                flex: 3,
-                child: image(),
-              ),
-              const SizedBox(height: 20),
+              Expanded(child: image()),
+              const SizedBox(height: 10),
               indicator(),
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
               theTitle(),
-              const SizedBox(height: 15),
-              Flexible(
-                flex: 1,
-                child: theDescription(),
-              ),
+              const SizedBox(height: 20),
+              theDescription(),
               const SizedBox(height: 20),
               button(),
             ],
           ),
-          skip(),
-        ],
-      ),
+        ),
+        skip(),
+      ],
     );
   }
 }

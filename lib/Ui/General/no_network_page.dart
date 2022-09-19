@@ -11,12 +11,11 @@ class NoNetworkPage extends StatelessWidget {
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
-        appBar: AppBar(automaticallyImplyLeading: false),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              alignment: Alignment.center,
-              width: double.infinity,
+        backgroundColor: PeanutTheme.transparent,
+        body: PeanutTheme.background(
+          Center(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: _content(),
             ),
           ),

@@ -47,7 +47,12 @@ class AuthenticationService {
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (signup && signInMethods.isNotEmpty) throw "Another account is already associated with this email. Please login.";
 
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      if (signup) {
+        await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      } else {
+        await _auth.signInWithEmailAndPassword(email: email, password: password);
+      }
+
       final user = _auth.currentUser;
 
       log("Logged In with - ${user?.uid}");
@@ -86,8 +91,7 @@ class AuthenticationService {
       final account = await googleSignIn.signIn();
       if (account == null) throw "Error ${signup ? "signing up" : "logging in"} with Google.";
 
-      final userCredential = await _auth.signInWithCredential(
-          GoogleAuthProvider.credential(idToken: (await account.authentication).idToken, accessToken: (await account.authentication).accessToken));
+      final userCredential = await _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: (await account.authentication).idToken, accessToken: (await account.authentication).accessToken));
       final user = userCredential.user;
       final doc = await FirestoreService.users.doc(user!.uid).get();
       final userExist = doc.exists;

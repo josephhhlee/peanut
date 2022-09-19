@@ -21,15 +21,19 @@ class SplashScreenPage extends StatelessWidget {
         height: screenSize.height,
         width: screenSize.width,
         alignment: Alignment.center,
-        color: PeanutTheme.white,
+        color: PeanutTheme.primaryColor,
         child: Stack(
+          alignment: Alignment.center,
           children: [
             Image.asset(
               "assets/entrance_background.jpg",
               width: size,
               height: size,
             ),
-            const Text("PEANUT"),
+            const Text(
+              "PEANUT",
+              style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white),
+            ),
           ],
         ),
       ),

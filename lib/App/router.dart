@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Entrance/login_page.dart';
+import 'package:peanut/Ui/Entrance/signup_page.dart';
 import 'package:peanut/Ui/General/maintenance_page.dart';
 import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
@@ -32,6 +33,7 @@ class PeanutRouter {
       // No Arguments
       SplashScreenPage.routeName: (_, __) => const MaterialPage(child: SplashScreenPage()),
       LoginPage.routeName: (_, __) => const MaterialPage(child: LoginPage()),
+      SignUpPage.routeName: (_, __) => const MaterialPage(child: SignUpPage()),
       PageNotFoundPage.routeName: (_, __) => const MaterialPage(child: PageNotFoundPage()),
       NoNetworkPage.routeName: (_, __) => const MaterialPage(child: NoNetworkPage()),
       MaintenancePage.routeName: (_, __) => const MaterialPage(child: MaintenancePage()),
@@ -42,8 +44,7 @@ class PeanutRouter {
 class Navigation {
   static VxNavigator? navigator;
 
-  static init() => navigator =
-      VxNavigator(routes: PeanutRouter.routes(), observers: [Observer()], notFoundPage: (_, __) => const MaterialPage(child: PageNotFoundPage()));
+  static init() => navigator = VxNavigator(routes: PeanutRouter.routes(), observers: [Observer()], notFoundPage: (_, __) => const MaterialPage(child: PageNotFoundPage()));
 
   static Future<dynamic> push(BuildContext context, String path, {dynamic args, bool wait = false, bool replace = false, bool clear = false}) async {
     if (replace) {

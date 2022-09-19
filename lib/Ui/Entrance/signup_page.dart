@@ -5,32 +5,34 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
+import 'package:peanut/Ui/Entrance/login_page.dart';
 import 'package:peanut/Ui/Entrance/onboarding.dart';
-import 'package:peanut/Ui/Entrance/signup_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
-class LoginPage extends StatefulWidget {
-  static const routeName = "/login";
+class SignUpPage extends StatefulWidget {
+  static const routeName = "/signup";
 
-  const LoginPage({super.key});
+  const SignUpPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final auth = FirebaseAuth.instance;
+  final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _resetEmail = TextEditingController();
+  final TextEditingController _passwordController2 = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
-  final FocusNode _resetFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode2 = FocusNode();
+  final FocusNode _displayNameFocusNode = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool _isResetPassword = false;
   bool _showPassword = false;
+  bool _showPassword2 = false;
 
   @override
   void initState() {
@@ -69,24 +71,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _backButton() {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.centerLeft,
-      child: IconButton(
-        onPressed: () => setState(() {
-          _formKey.currentState?.reset();
-          _isResetPassword = false;
-          _resetEmail.clear();
-        }),
-        icon: const Icon(
-          Icons.arrow_back_rounded,
-          size: 40,
-        ),
-      ),
-    );
-  }
-
   Widget _showLoginMenu() {
     var width = MediaQuery.of(context).size.width < 500 ? MediaQuery.of(context).size.width : 500.0;
     var menuPadding = 30.0;
@@ -100,27 +84,21 @@ class _LoginPageState extends State<LoginPage> {
         key: _formKey,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: _isResetPassword
-              ? [
-                  _backButton(),
-                  _title("Password Reset", "Enter Registered Email to Continue", displaySignUp: false),
-                  const SizedBox(height: 45),
-                  _textForm("Email", _resetEmail, _resetFocusNode),
-                  const SizedBox(height: 45),
-                  _mainButton("reset"),
-                ]
-              : [
-                  _title("Login", "Sign In to Continue"),
-                  const SizedBox(height: 45),
-                  _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
-                  _or(),
-                  _textForm("Email", _emailController, _emailFocusNode),
-                  const SizedBox(height: 20),
-                  _textForm("Password", _passwordController, _passwordFocusNode),
-                  const SizedBox(height: 45),
-                  _mainButton("sign in"),
-                  _forgotPW(),
-                ],
+          children: [
+            _title("Sign Up", "Sign Up to Create a New Account"),
+            const SizedBox(height: 45),
+            _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
+            _or(),
+            _textForm("Display Name", _displayNameController, _displayNameFocusNode),
+            const SizedBox(height: 20),
+            _textForm("Email", _emailController, _emailFocusNode),
+            const SizedBox(height: 20),
+            _textForm("Password", _passwordController, _passwordFocusNode),
+            const SizedBox(height: 20),
+            _pwForm2("Confirm Password", _passwordController2, _passwordFocusNode2),
+            const SizedBox(height: 45),
+            _mainButton("sign up"),
+          ],
         ),
       ),
     );
@@ -150,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _title(String header, String desc, {bool displaySignUp = true}) {
+  Widget _title(String header, String desc) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Column(
@@ -164,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
             desc,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
-          if (displaySignUp) _dontHaveAcc(),
+          _haveAcc(),
         ],
       ),
     );
@@ -217,6 +195,42 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
+      validator: (value) {
+        if (value!.isEmpty) return "Required";
+        if (hint == "Password") {
+          if (_passwordController.text != _passwordController2.text) return "Passwords do not match";
+          if (!RegExp(r"^(?=.*?[a-zA-Z])(?=.*?[0-9]).{8,}$").hasMatch(value)) return "Password must be at least 8 characters long and contain more than one letter and one digit";
+        }
+        if (hint == "Email" && !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?").hasMatch(value)) {
+          return "Email address has to be in format:\nsomeone@example.com";
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _pwForm2(String hint, TextEditingController controller, FocusNode focusNode) {
+    return TextFormField(
+      autofocus: false,
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: hint.contains("Password") && !_showPassword2,
+      style: const TextStyle(color: PeanutTheme.almostBlack),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: PeanutTheme.white,
+        border: const OutlineInputBorder(),
+        labelText: hint,
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        suffixIcon: Visibility(
+          visible: controller.text.isNotEmpty,
+          child: IconButton(
+            onPressed: () => setState(() => _showPassword2 = !_showPassword2),
+            icon: Icon(_showPassword2 ? Icons.visibility_off : Icons.visibility, color: PeanutTheme.almostBlack),
+          ),
+        ),
+      ),
       validator: (value) => value!.isEmpty ? "Required" : null,
     );
   }
@@ -241,36 +255,13 @@ class _LoginPageState extends State<LoginPage> {
           if (!validate!) return;
 
           try {
-            if (button == "reset") {
-              await AuthenticationService.resetPassword(_resetEmail.text).whenComplete(() {
-                CommonUtils.toast(context, "An email will be sent to your registered email shortly\nPlease check your email");
-                _resetEmail.clear();
-                setState(() => _isResetPassword = false);
-              });
-            } else {
-              await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text).whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
-            }
+            await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, signup: true)
+                .whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
           } catch (e) {
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
           }
         },
         child: Text(button.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-
-  Widget _forgotPW() {
-    return TextButton(
-      onPressed: () {
-        setState(() {
-          _formKey.currentState?.reset();
-          _isResetPassword = true;
-          _passwordController.clear();
-        });
-      },
-      child: const Text(
-        'Forgot Password?',
-        style: TextStyle(fontSize: 13, decoration: TextDecoration.underline),
       ),
     );
   }
@@ -303,9 +294,9 @@ class _LoginPageState extends State<LoginPage> {
         Future<void> login() async {
           try {
             if (signInOption == "google") {
-              await AuthenticationService.loginWithGoogle();
+              await AuthenticationService.loginWithGoogle(signup: true);
             } else if (signInOption == "apple") {
-              await AuthenticationService.loginWithApple();
+              await AuthenticationService.loginWithApple(signup: true);
             }
           } catch (e) {
             rethrow;
@@ -347,7 +338,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const Expanded(
               child: Text(
-                "SIGN IN",
+                "SIGN UP",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
@@ -358,7 +349,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _dontHaveAcc() {
+  Widget _haveAcc() {
     var textSize = 12.0;
 
     return Padding(
@@ -366,7 +357,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Row(
         children: [
           Text(
-            "Don't have account? ",
+            "Have An Account? ",
             style: TextStyle(
               fontSize: textSize,
               color: PeanutTheme.almostBlack,
@@ -375,11 +366,11 @@ class _LoginPageState extends State<LoginPage> {
           ),
           GestureDetector(
             onTap: () async {
-              Navigation.push(context, SignUpPage.routeName);
+              Navigation.push(context, LoginPage.routeName);
               await Future.delayed(const Duration(milliseconds: 500), () => _formKey.currentState?.reset());
             },
             child: Text(
-              "Sign up",
+              "Log In",
               style: TextStyle(
                 color: PeanutTheme.primaryColor,
                 fontSize: textSize + 2,
