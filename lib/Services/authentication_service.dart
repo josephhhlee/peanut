@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:peanut/App/data_store.dart';
+import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
@@ -37,18 +38,22 @@ class AuthenticationService {
       }
     }
 
+    Properties.navigationQueue.clear();
     DataStore().setDataInitialized(false);
     await checkIfGoogleSignIn().catchError((e) => log("Google Sign In Error: $e"));
     await FirebaseAuth.instance.signOut().catchError((e) => log("FirebaseAuth Logout Error: $e"));
+    Navigation.navigator?.routeManager.clearAndPush(Uri.parse(LoginPage.routeName));
   }
 
-  static Future<void> loginWithEmail(String email, String password, {bool signup = false}) async {
+  static Future<void> loginWithEmail(String email, String password, {String? displayName, bool signup = false}) async {
     try {
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (signup && signInMethods.isNotEmpty) throw "Another account is already associated with this email. Please login.";
 
       if (signup) {
         await _auth.createUserWithEmailAndPassword(email: email, password: password);
+        final nutUser = NutUser(uid: _auth.currentUser?.uid, displayName: displayName, email: email.toLowerCase());
+        await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
       } else {
         await _auth.signInWithEmailAndPassword(email: email, password: password);
       }

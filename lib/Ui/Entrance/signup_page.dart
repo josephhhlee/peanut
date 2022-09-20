@@ -255,7 +255,7 @@ class _SignUpPageState extends State<SignUpPage> {
           if (!validate!) return;
 
           try {
-            await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, signup: true)
+            await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, displayName: _displayNameController.text, signup: true)
                 .whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
           } catch (e) {
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);

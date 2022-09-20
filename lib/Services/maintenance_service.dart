@@ -25,4 +25,6 @@ class MaintenanceService {
       Navigation.navigator?.routeManager.clearAndPush(Uri.parse(SplashScreenPage.routeName));
     }
   }
+
+  static void dispose() => listener?.cancel();
 }

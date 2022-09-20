@@ -1,10 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:peanut/App/configs.dart';
+import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/App/data_store.dart';
+import 'package:peanut/Services/location_service.dart';
 import 'package:peanut/Services/maintenance_service.dart';
 import 'package:peanut/Services/network_service.dart';
 import 'package:peanut/firebase_options.dart';
@@ -16,6 +19,7 @@ void main({env = "dev"}) async {
 
   await Configs().init(env: env);
   await DataStore().init();
+  Properties().init();
 
   if (env != "prod") await DataStore().pref.remove("onboarding");
 
@@ -62,8 +66,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    NetworkService.listener?.cancel();
-    MaintenanceService.listener?.cancel();
+    NetworkService.dispose();
+    MaintenanceService.dispose();
+    LocationService.dispose();
     super.dispose();
   }
 
@@ -84,6 +89,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: const [Locale.fromSubtags(languageCode: 'en', countryCode: 'SG')],
       routeInformationParser: InformationParser(),
       routerDelegate: Navigation.navigator,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }

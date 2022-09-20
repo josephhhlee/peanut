@@ -8,6 +8,8 @@
 		<string>Need to access your microphone for video recording</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Need to access your location to use the app</string>
+		<key>UIBackgroundModes</key>
+		<string>location</string>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true />
 		<key>CFBundleDevelopmentRegion</key>

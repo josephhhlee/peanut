@@ -9,7 +9,7 @@ class SplashScreenPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => SplashScreenViewModel().init());
+    WidgetsBinding.instance.addPostFrameCallback((_) => SplashScreenViewModel().init(context));
 
     final screenSize = MediaQuery.of(context).size;
     final refSize = screenSize.width < screenSize.height ? screenSize.width : screenSize.height;

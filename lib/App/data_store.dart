@@ -1,7 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:location/location.dart';
+import 'package:peanut/Models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DataStore with ChangeNotifier {
@@ -12,19 +13,32 @@ class DataStore with ChangeNotifier {
   late final SharedPreferences pref;
   late final SecureStorage secureStorage;
 
-  bool dataInitialised = false;
-
   Future<void> init() async {
     pref = await SharedPreferences.getInstance();
     secureStorage = SecureStorage();
   }
 
+  String? mapTheme;
+
+  bool dataInitialised = false;
+  NutUser? currentUser;
   void setDataInitialized(bool dataInitialised) {
     this.dataInitialised = dataInitialised;
 
-    if (!dataInitialised) {}
+    if (!dataInitialised) {
+      currentUser = null;
+      secureStorage.clearCache();
+    }
     notifyListeners();
   }
+
+  LocationData? locationData;
+  void updateLocation(LocationData locationData) {
+    this.locationData = locationData;
+    notifyListeners();
+  }
+
+  void addLocationListener(Function(LocationData? location) function) => addListener(() => function(locationData));
 }
 
 class SecureStorage {

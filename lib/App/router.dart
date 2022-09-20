@@ -8,6 +8,7 @@ import 'package:peanut/Ui/General/maintenance_page.dart';
 import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
+import 'package:peanut/Ui/Global/home_page.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 class InformationParser extends VxInformationParser {
@@ -34,6 +35,7 @@ class PeanutRouter {
       SplashScreenPage.routeName: (_, __) => const MaterialPage(child: SplashScreenPage()),
       LoginPage.routeName: (_, __) => const MaterialPage(child: LoginPage()),
       SignUpPage.routeName: (_, __) => const MaterialPage(child: SignUpPage()),
+      HomePage.routeName: (_, __) => const MaterialPage(child: HomePage()),
       PageNotFoundPage.routeName: (_, __) => const MaterialPage(child: PageNotFoundPage()),
       NoNetworkPage.routeName: (_, __) => const MaterialPage(child: NoNetworkPage()),
       MaintenancePage.routeName: (_, __) => const MaterialPage(child: MaintenancePage()),

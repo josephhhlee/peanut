@@ -46,10 +46,8 @@ class NetworkService {
       _networkTimer?.cancel();
 
       if (_pageToResume != null) {
-        var nonResumablePage = _pageToResume!.path.isEmpty ||
-            _pageToResume!.path == PageNotFoundPage.routeName ||
-            _pageToResume!.path == NoNetworkPage.routeName ||
-            _pageToResume!.path == MaintenancePage.routeName;
+        var nonResumablePage =
+            _pageToResume!.path.isEmpty || _pageToResume!.path == PageNotFoundPage.routeName || _pageToResume!.path == NoNetworkPage.routeName || _pageToResume!.path == MaintenancePage.routeName;
 
         if (nonResumablePage) {
           Navigation.navigator?.routeManager.clearAndPush(Uri.parse(SplashScreenPage.routeName));
@@ -59,5 +57,10 @@ class NetworkService {
         _pageToResume = null;
       }
     }
+  }
+
+  static void dispose() {
+    listener?.cancel();
+    _networkTimer?.cancel();
   }
 }
