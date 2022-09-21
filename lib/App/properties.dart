@@ -20,6 +20,11 @@ class Properties {
   static late ValueNotifier<int> navigationBarIndex;
   static late ListQueue<int> navigationQueue;
 
+  static reset() {
+    navigationBarIndex.value = 0;
+    navigationQueue.clear();
+  }
+
   static bool _warnQuitApp = false;
   static Future<bool> onBack(BuildContext context) async {
     if (navigationQueue.isEmpty) {

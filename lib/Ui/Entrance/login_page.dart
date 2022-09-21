@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
@@ -33,8 +35,14 @@ class _LoginPageState extends State<LoginPage> {
   bool _showPassword = false;
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _resetEmail.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _resetFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Stack(
         children: [
           Scaffold(
-            resizeToAvoidBottomInset: false,
+            resizeToAvoidBottomInset: true,
             backgroundColor: PeanutTheme.transparent,
             body: PeanutTheme.background(
               Center(
@@ -198,10 +206,13 @@ class _LoginPageState extends State<LoginPage> {
       ],
     );
 
+    final length = hint == "Password" ? Configs.passwordCharLimit : Configs.emailCharLimit;
+
     return TextFormField(
       autofocus: false,
       controller: controller,
       focusNode: focusNode,
+      maxLength: length,
       obscureText: hint == "Password" && !_showPassword,
       style: const TextStyle(color: PeanutTheme.almostBlack),
       decoration: InputDecoration(
@@ -242,13 +253,14 @@ class _LoginPageState extends State<LoginPage> {
 
           try {
             if (button == "reset") {
-              await AuthenticationService.resetPassword(_resetEmail.text).whenComplete(() {
-                CommonUtils.toast(context, "An email will be sent to your registered email shortly\nPlease check your email");
-                _resetEmail.clear();
-                setState(() => _isResetPassword = false);
-              });
+              await AuthenticationService.resetPassword(_resetEmail.text);
+              _resetEmail.clear();
+              await showOkAlertDialog(context: context, message: "An email will be sent to your registered email shortly\nPlease check your email");
+              setState(() => _isResetPassword = false);
             } else {
-              await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text).whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
+              await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text);
+              // ignore: use_build_context_synchronously
+              Navigation.push(context, SplashScreenPage.routeName, clear: true);
             }
           } catch (e) {
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
@@ -270,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: const Text(
         'Forgot Password?',
-        style: TextStyle(fontSize: 13, decoration: TextDecoration.underline),
+        style: TextStyle(fontSize: 13, decoration: TextDecoration.underline, color: PeanutTheme.darkOrange),
       ),
     );
   }
@@ -381,8 +393,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Text(
               "Sign up",
               style: TextStyle(
-                color: PeanutTheme.primaryColor,
-                fontSize: textSize + 2,
+                color: PeanutTheme.darkOrange,
+                fontSize: textSize + 3,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),

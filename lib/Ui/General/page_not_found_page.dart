@@ -65,7 +65,7 @@ class PageNotFoundPage extends StatelessWidget {
           padding: const EdgeInsets.all(20),
         ),
         child: const Text(
-          "Back to Home Page",
+          "Back to Main Page",
           style: TextStyle(color: PeanutTheme.white, fontSize: 18),
         ),
       );

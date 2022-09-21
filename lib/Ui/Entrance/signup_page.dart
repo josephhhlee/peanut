@@ -1,14 +1,18 @@
 import 'dart:io';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Entrance/login_page.dart';
 import 'package:peanut/Ui/Entrance/onboarding.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
+import 'package:peanut/Ui/Entrance/verify_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
+import 'package:peanut/Utils/text_utils.dart';
 
 class SignUpPage extends StatefulWidget {
   static const routeName = "/signup";
@@ -35,8 +39,16 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _showPassword2 = false;
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _displayNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _passwordController2.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _passwordFocusNode2.dispose();
+    _displayNameFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,7 +58,7 @@ class _SignUpPageState extends State<SignUpPage> {
       child: Stack(
         children: [
           Scaffold(
-            resizeToAvoidBottomInset: false,
+            resizeToAvoidBottomInset: true,
             backgroundColor: PeanutTheme.transparent,
             body: PeanutTheme.background(
               Center(
@@ -176,11 +188,20 @@ class _SignUpPageState extends State<SignUpPage> {
       ],
     );
 
+    final length = hint == "Display Name"
+        ? Configs.displayNameCharLimit
+        : hint == "Password"
+            ? Configs.passwordCharLimit
+            : Configs.emailCharLimit;
+
     return TextFormField(
       autofocus: false,
       controller: controller,
       focusNode: focusNode,
+      maxLength: length,
       obscureText: hint == "Password" && !_showPassword,
+      textCapitalization: hint == "Display Name" ? TextCapitalization.words : TextCapitalization.none,
+      inputFormatters: hint == "Display Name" ? [TitleCaseTextFormatter()] : null,
       style: const TextStyle(color: PeanutTheme.almostBlack),
       decoration: InputDecoration(
         filled: true,
@@ -214,6 +235,7 @@ class _SignUpPageState extends State<SignUpPage> {
       autofocus: false,
       controller: controller,
       focusNode: focusNode,
+      maxLength: Configs.passwordCharLimit,
       obscureText: hint.contains("Password") && !_showPassword2,
       style: const TextStyle(color: PeanutTheme.almostBlack),
       decoration: InputDecoration(
@@ -255,8 +277,9 @@ class _SignUpPageState extends State<SignUpPage> {
           if (!validate!) return;
 
           try {
-            await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, displayName: _displayNameController.text, signup: true)
-                .whenComplete(() => Navigation.push(context, SplashScreenPage.routeName, clear: true));
+            await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, displayName: _displayNameController.text, signup: true);
+            // ignore: use_build_context_synchronously
+            Navigation.push(context, VerifyPage.routeName, args: false);
           } catch (e) {
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
           }
@@ -372,8 +395,8 @@ class _SignUpPageState extends State<SignUpPage> {
             child: Text(
               "Log In",
               style: TextStyle(
-                color: PeanutTheme.primaryColor,
-                fontSize: textSize + 2,
+                color: PeanutTheme.darkOrange,
+                fontSize: textSize + 3,
                 fontWeight: FontWeight.bold,
                 decoration: TextDecoration.underline,
               ),

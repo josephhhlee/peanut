@@ -11,6 +11,7 @@ class PeanutTheme {
   static const Color almostBlack = Color(0xFF424242);
   static const Color white = Colors.white;
   static const Color errorColor = Color.fromARGB(255, 255, 51, 51);
+  static const Color darkOrange = Color.fromARGB(255, 255, 76, 0);
 
   static const TextTheme defaultTextStyle = TextTheme();
 

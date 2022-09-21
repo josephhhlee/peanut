@@ -56,7 +56,6 @@ dependencies:
   fluttertoast: ^8.0.9
   sign_in_with_apple: ^4.1.0
   cached_network_image: ^3.2.2
-  sprung: ^3.0.1
   animated_bottom_navigation_bar: ^1.1.0
   google_maps_flutter: ^2.2.0
   permission_handler: ^10.0.0

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
@@ -12,7 +13,9 @@ class MaintenanceService {
   static StreamSubscription<void> init() => listener = FirestoreService.appConfigs.doc("maintenance").snapshots().listen(_updateMaintenanceStatus);
 
   static void _updateMaintenanceStatus(DocumentSnapshot doc) async {
-    if (doc.get("activate")) {
+    final platformActivate = Platform.isIOS ? "activateIOS" : "activateAndroid";
+
+    if (doc.get(platformActivate) || doc.get("activate")) {
       Configs().maintenance = true;
       var msg = Map.from(doc.data() as Map)["customDescription"].trim();
       Configs().customMaintenanceMsg = msg.isEmpty ? null : msg;

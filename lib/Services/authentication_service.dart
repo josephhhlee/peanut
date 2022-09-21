@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:peanut/App/data_store.dart';
-import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/Entrance/login_page.dart';
+import 'package:peanut/Ui/Entrance/verify_page.dart';
+import 'package:peanut/Utils/text_utils.dart';
 import 'dart:developer';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -13,19 +14,26 @@ class AuthenticationService {
   static final _auth = FirebaseAuth.instance;
 
   static Future<bool> checkForLogin({bool redirect = false}) async {
-    Future<bool> process() async {
+    Future<bool> handleNullUser() async {
       await logout();
       if (redirect) Navigation.navigator?.routeManager.clearAndPush(Uri.parse(LoginPage.routeName));
       return false;
     }
 
+    bool handleUnverifiedUser() {
+      if (redirect) Navigation.navigator?.routeManager.clearAndPushAll([Uri.parse(LoginPage.routeName), Uri.parse(VerifyPage.routeName)]);
+      return false;
+    }
+
     try {
       var currentUser = _auth.currentUser;
-      if (currentUser == null) return await process();
+      if (currentUser == null) return await handleNullUser();
+      if (currentUser.providerData.first.providerId == EmailAuthProvider.PROVIDER_ID && !currentUser.emailVerified) return handleUnverifiedUser();
+
       return true;
     } catch (e) {
       log("failed login -  $e");
-      return await process();
+      return await handleNullUser();
     }
   }
 
@@ -33,12 +41,9 @@ class AuthenticationService {
     Future<void> checkIfGoogleSignIn() async {
       GoogleSignInAccount? googleSignInAccount = GoogleSignIn().currentUser;
       bool googleSignIn = await GoogleSignIn().isSignedIn();
-      if (googleSignInAccount != null && googleSignIn) {
-        await GoogleSignIn().disconnect();
-      }
+      if (googleSignInAccount != null && googleSignIn) await GoogleSignIn().disconnect();
     }
 
-    Properties.navigationQueue.clear();
     DataStore().setDataInitialized(false);
     await checkIfGoogleSignIn().catchError((e) => log("Google Sign In Error: $e"));
     await FirebaseAuth.instance.signOut().catchError((e) => log("FirebaseAuth Logout Error: $e"));
@@ -46,14 +51,17 @@ class AuthenticationService {
   }
 
   static Future<void> loginWithEmail(String email, String password, {String? displayName, bool signup = false}) async {
+    const errorMsg1 = "An existing account is already associated with this email.";
+    final errorMsg2 = "Error ${signup ? "signing up" : "logging in"} with Email.";
     try {
       final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-      if (signup && signInMethods.isNotEmpty) throw "Another account is already associated with this email. Please login.";
+      if (signup && signInMethods.isNotEmpty) throw errorMsg1;
 
       if (signup) {
         await _auth.createUserWithEmailAndPassword(email: email, password: password);
-        final nutUser = NutUser(uid: _auth.currentUser?.uid, displayName: displayName, email: email.toLowerCase());
+        final nutUser = NutUser(uid: _auth.currentUser!.uid, displayName: TextUtil.convertTitleCase(displayName!), email: email.toLowerCase());
         await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
+        await _auth.currentUser?.sendEmailVerification();
       } else {
         await _auth.signInWithEmailAndPassword(email: email, password: password);
       }
@@ -63,13 +71,16 @@ class AuthenticationService {
       log("Logged In with - ${user?.uid}");
     } catch (e) {
       log(e.toString());
-      throw "Error ${signup ? "signing up" : "logging in"} with Email.";
+      if (!e.toString().contains(errorMsg1)) throw errorMsg2;
+      throw e.toString();
     }
   }
 
   static Future<void> loginWithApple({bool signup = false}) async {
+    final errorMsg1 = "Apple ${signup ? "Sign Up" : "Log In"} is not available for your device.";
+    final errorMsg2 = "Error ${signup ? "signing up" : "logging in"} with Apple.";
     try {
-      if (!await SignInWithApple.isAvailable()) throw "Apple ${signup ? "Sign Up" : "Log In"} is not available for your device.";
+      if (!await SignInWithApple.isAvailable()) throw errorMsg1;
 
       final credential = await SignInWithApple.getAppleIDCredential(scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName]);
       final oauthCredential = OAuthProvider("apple.com").credential(idToken: credential.identityToken);
@@ -79,22 +90,25 @@ class AuthenticationService {
       final userExist = doc.exists;
 
       if (signup && !userExist) {
-        final nutUser = NutUser(displayName: credential.givenName, email: credential.email?.toLowerCase(), uid: user.uid);
+        final nutUser = NutUser(displayName: TextUtil.convertTitleCase(credential.givenName!), email: credential.email!.toLowerCase(), uid: user.uid, verified: true);
         await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
       }
 
       log("Logged In with - ${user.uid}");
     } catch (e) {
       log(e.toString());
-      throw "Error ${signup ? "signing up" : "logging in"} with Apple.";
+      if (!e.toString().contains(errorMsg1)) throw errorMsg2;
+      throw e.toString();
     }
   }
 
   static Future<void> loginWithGoogle({bool signup = false}) async {
+    final errorMsg1 = "Error ${signup ? "signing up" : "logging in"} with Google.";
+    final errorMsg2 = "Error ${signup ? "signing up" : "logging in"} with Google.";
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final account = await googleSignIn.signIn();
-      if (account == null) throw "Error ${signup ? "signing up" : "logging in"} with Google.";
+      if (account == null) throw errorMsg1;
 
       final userCredential = await _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: (await account.authentication).idToken, accessToken: (await account.authentication).accessToken));
       final user = userCredential.user;
@@ -102,14 +116,15 @@ class AuthenticationService {
       final userExist = doc.exists;
 
       if (signup && !userExist) {
-        final nutUser = NutUser(displayName: user.displayName, email: user.email?.toLowerCase(), uid: user.uid);
+        final nutUser = NutUser(displayName: TextUtil.convertTitleCase(user.displayName!), email: user.email!.toLowerCase(), uid: user.uid, verified: true);
         await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
       }
 
       log("Logged In with - ${user.uid}");
     } catch (e) {
       log(e.toString());
-      throw "Error ${signup ? "signing up" : "logging in"} with Google.";
+      if (!e.toString().contains(errorMsg1)) throw errorMsg2;
+      throw e.toString();
     }
   }
 
@@ -118,7 +133,7 @@ class AuthenticationService {
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
       log(e.toString());
-      throw "Error resetting password.";
+      throw "Error with password reset.";
     }
   }
 }

@@ -42,6 +42,7 @@ class NetworkService {
       _pageToResume = Navigation.navigator?.currentConfiguration!;
       _networkTimer = Timer(const Duration(seconds: 2), handleNoNetwork);
     } else {
+      Configs.initRemoteConfig();
       Configs().connected = true;
       _networkTimer?.cancel();
 

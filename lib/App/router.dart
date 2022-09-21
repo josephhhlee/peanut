@@ -4,6 +4,7 @@ import 'package:peanut/App/configs.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Entrance/login_page.dart';
 import 'package:peanut/Ui/Entrance/signup_page.dart';
+import 'package:peanut/Ui/Entrance/verify_page.dart';
 import 'package:peanut/Ui/General/maintenance_page.dart';
 import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
@@ -31,7 +32,6 @@ class InformationParser extends VxInformationParser {
 class PeanutRouter {
   static Map<Pattern, Page Function(Uri, dynamic)> routes() {
     return {
-      // No Arguments
       SplashScreenPage.routeName: (_, __) => const MaterialPage(child: SplashScreenPage()),
       LoginPage.routeName: (_, __) => const MaterialPage(child: LoginPage()),
       SignUpPage.routeName: (_, __) => const MaterialPage(child: SignUpPage()),
@@ -39,6 +39,7 @@ class PeanutRouter {
       PageNotFoundPage.routeName: (_, __) => const MaterialPage(child: PageNotFoundPage()),
       NoNetworkPage.routeName: (_, __) => const MaterialPage(child: NoNetworkPage()),
       MaintenancePage.routeName: (_, __) => const MaterialPage(child: MaintenancePage()),
+      VerifyPage.routeName: (_, arg) => MaterialPage(child: VerifyPage(arg)),
     };
   }
 }
@@ -63,14 +64,12 @@ class Navigation {
   static void popUntil(BuildContext context, String path) {
     while (navigator?.currentConfiguration?.path != path) {
       var currentPage = navigator?.currentConfiguration?.path;
-      // if (currentPage == "/" || currentPage == HomePage.routeName || currentPage == LoginPage.routeName) break;
+      if (currentPage == "/" || currentPage == HomePage.routeName || currentPage == LoginPage.routeName) break;
       pop(context);
     }
   }
 
-  // static redirectToHome() => navigator.routeManager.replace(Uri.parse(HomePage.routeName));
-
-  static void popUntilHome(BuildContext context) => popUntil(context, "home");
+  static void popUntilHome(BuildContext context) => popUntil(context, "/");
 }
 
 class Observer extends VxObserver {

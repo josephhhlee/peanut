@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
+import 'package:peanut/App/properties.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,6 +28,7 @@ class DataStore with ChangeNotifier {
 
     if (!dataInitialised) {
       currentUser = null;
+      Properties.reset();
       secureStorage.clearCache();
     }
     notifyListeners();

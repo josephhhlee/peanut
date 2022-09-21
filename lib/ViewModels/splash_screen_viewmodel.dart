@@ -12,6 +12,8 @@ import 'package:peanut/Services/location_service.dart';
 import 'package:peanut/Ui/Global/home_page.dart';
 
 class SplashScreenViewModel {
+  final datastore = DataStore();
+
   Future<void> init(BuildContext context) async {
     final loggedIn = await AuthenticationService.checkForLogin(redirect: true);
     if (loggedIn) {
@@ -23,7 +25,7 @@ class SplashScreenViewModel {
     }
   }
 
-  Future<void> initCurrentUser() async => DataStore().currentUser = NutUser.fromSnapshot(await FirestoreService.users.doc(FirebaseAuth.instance.currentUser!.uid).get());
+  Future<void> initCurrentUser() async => datastore.currentUser = NutUser.fromSnapshot(await FirestoreService.users.doc(FirebaseAuth.instance.currentUser!.uid).get());
 
-  Future<void> initMapTheme() async => DataStore().mapTheme = await rootBundle.loadString('assets/themes/theme3.json');
+  Future<void> initMapTheme() async => datastore.mapTheme ??= await rootBundle.loadString('assets/themes/theme3.json');
 }

@@ -4,22 +4,32 @@ import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/theme.dart';
 
 class PeanutNavigationBar extends StatelessWidget {
-  const PeanutNavigationBar({super.key});
+  final Animation<double> borderRadiusAnimation;
+
+  const PeanutNavigationBar(this.borderRadiusAnimation, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final icons = Properties.icons;
+
     return ValueListenableBuilder(
       valueListenable: Properties.navigationBarIndex,
-      builder: (_, value, __) => AnimatedBottomNavigationBar(
-        icons: Properties.icons,
+      builder: (_, value, __) => AnimatedBottomNavigationBar.builder(
         activeIndex: value,
         gapLocation: GapLocation.center,
         notchSmoothness: NotchSmoothness.verySmoothEdge,
         onTap: (index) => Properties.navigationBarIndex.value = index,
-        activeColor: PeanutTheme.primaryColor,
         backgroundColor: PeanutTheme.almostBlack,
-        inactiveColor: PeanutTheme.white,
         borderColor: PeanutTheme.secondaryColor,
+        itemCount: icons.length,
+        notchAndCornersAnimation: borderRadiusAnimation,
+        tabBuilder: (int index, bool isActive) {
+          return Icon(
+            icons[index],
+            size: 24,
+            color: isActive ? PeanutTheme.primaryColor : PeanutTheme.white,
+          );
+        },
       ),
     );
   }

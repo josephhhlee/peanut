@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:peanut/App/data_store.dart';
@@ -23,6 +25,13 @@ class _PeanutMapState extends State<PeanutMap> {
   }
 
   @override
+  void dispose() {
+    controller?.dispose();
+    controller = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final location = DataStore().locationData;
     final lat = location?.latitude;
@@ -44,6 +53,11 @@ class _PeanutMapState extends State<PeanutMap> {
           rotateGesturesEnabled: true,
           tiltGesturesEnabled: false,
           zoomControlsEnabled: false,
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+            Factory<OneSequenceGestureRecognizer>(
+              () => EagerGestureRecognizer(),
+            ),
+          },
         ),
       ],
     );

@@ -6,9 +6,11 @@ import 'package:peanut/App/data_store.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class LocationService {
-  static late final StreamSubscription<LocationData>? _listener;
+  static StreamSubscription<LocationData>? _listener;
 
   static Future<void> init(BuildContext context) async {
+    if (_listener != null) return;
+
     Future<bool> requestPermission() async {
       await Permission.locationWhenInUse.request();
       return await Permission.locationWhenInUse.request().isGranted;
