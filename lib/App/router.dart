@@ -10,6 +10,8 @@ import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Ui/Global/home_page.dart';
+import 'package:peanut/Ui/MainPages/add_quest_page.dart';
+import 'package:peanut/Utils/animation_utils.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 class InformationParser extends VxInformationParser {
@@ -39,8 +41,20 @@ class PeanutRouter {
       PageNotFoundPage.routeName: (_, __) => const MaterialPage(child: PageNotFoundPage()),
       NoNetworkPage.routeName: (_, __) => const MaterialPage(child: NoNetworkPage()),
       MaintenancePage.routeName: (_, __) => const MaterialPage(child: MaintenancePage()),
+      AddQuestPage.routeName: (_, __) => VxRoutePage(child: const AddQuestPage(), transition: fabTransition),
       VerifyPage.routeName: (_, arg) => MaterialPage(child: VerifyPage(arg)),
     };
+  }
+
+  static Widget fabTransition(Animation<double> animation, Widget child) {
+    final screenSize = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
+    return ClipPath(
+      clipper: CircularRevealClipper(
+        centerOffset: Offset(screenSize.width / 2, screenSize.height - 50),
+        fraction: animation.value,
+      ),
+      child: child,
+    );
   }
 }
 

@@ -18,6 +18,7 @@ class Configs {
   static late int? displayNameCharLimit;
   static late int? emailCharLimit;
   static late int? passwordCharLimit;
+  static late int? emailTimer;
 
   static Future<void> initRemoteConfig() async {
     FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
@@ -26,6 +27,7 @@ class Configs {
     displayNameCharLimit = remoteConfig.getInt("display_name_character_limit");
     emailCharLimit = remoteConfig.getInt("email_character_limit");
     passwordCharLimit = remoteConfig.getInt("password_character_limit");
+    emailTimer = remoteConfig.getInt("email_timer");
   }
 
   bool connected = false;

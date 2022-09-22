@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
@@ -16,7 +17,7 @@ class VerifyPage extends StatelessWidget {
   final bool? enableReset;
   final _auth = FirebaseAuth.instance;
   final ValueNotifier<int> _count = ValueNotifier(0);
-  final int timer = 60;
+  final int timer = Configs.emailTimer ?? 60;
 
   void _initTimer(BuildContext context) {
     Timer.periodic(const Duration(seconds: 1), (timer) {
