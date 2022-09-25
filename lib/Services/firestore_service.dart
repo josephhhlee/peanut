@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
-  static final appConfigs = FirebaseFirestore.instance.collection("appConfigs");
-  static final onboarding = appConfigs.doc("onboarding");
-  static final configs = appConfigs.doc("configs");
-  static final maintenance = appConfigs.doc("maintenance");
-  static final users = FirebaseFirestore.instance.collection("users");
+  static final _firestore = FirebaseFirestore.instance;
+
+  static final appConfigsCol = _firestore.collection("appConfigs");
+  static final usersCol = _firestore.collection("users");
+  static final questsCol = _firestore.collection("quests");
+
+  static final onboardingDoc = appConfigsCol.doc("onboarding");
+  static final configsDoc = appConfigsCol.doc("configs");
+  static final maintenanceDoc = appConfigsCol.doc("maintenance");
 }

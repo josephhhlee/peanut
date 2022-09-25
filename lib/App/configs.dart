@@ -18,7 +18,9 @@ class Configs {
   static late int displayNameCharLimit;
   static late int emailCharLimit;
   static late int passwordCharLimit;
+  static late int descriptionCharLimit;
   static late int verificationResendTimer;
+  static late int geohashPrecision;
   static late double mapZoomLevel;
   static late String googleMapsApi;
   static late String androidBundleId;
@@ -28,7 +30,7 @@ class Configs {
 
   static Future<void> initRemoteConfig() async {
     try {
-      final doc = await FirestoreService.configs.get();
+      final doc = await FirestoreService.configsDoc.get();
       final map = doc.data();
       final charLimits = Map.from(map!["character_limits"]);
       final timers = Map.from(map["timers"]);
@@ -38,9 +40,11 @@ class Configs {
       displayNameCharLimit = charLimits["display_name"];
       emailCharLimit = charLimits["email"]!;
       passwordCharLimit = charLimits["password"]!;
+      descriptionCharLimit = charLimits["description"];
       verificationResendTimer = timers["verification_resend"];
       mapZoomLevel = maps["zoom"].toDouble();
       googleMapsApi = maps["api"];
+      geohashPrecision = maps["geohash_precision"];
       androidBundleId = android["bundle_id"];
       androidSHA1 = android["signing_sha1"];
       googleAndroidApi = android["google_api"];

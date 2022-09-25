@@ -34,7 +34,7 @@ class _OnboardingState extends State<Onboarding> {
   Future<void> _init() async {
     Future<void> retrieveDetails() async {
       try {
-        var doc = await FirestoreService.onboarding.get();
+        var doc = await FirestoreService.onboardingDoc.get();
         if (doc.get("activate")) {
           _details = List.from(doc.get("pages"));
           if (mounted) setState(() {});

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Ui/MainPages/map_selection_page.dart';
+import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/Utils/text_utils.dart';
 
 class AddQuestPage extends StatefulWidget {
@@ -16,8 +19,15 @@ class AddQuestPage extends StatefulWidget {
 }
 
 class _AddQuestPageState extends State<AddQuestPage> {
-  final _startLoc = TextEditingController();
-  final _startLocFocus = FocusNode();
+  final _formKey = GlobalKey<FormState>();
+  final _questLocation = TextEditingController();
+  final _rewards = TextEditingController();
+  final _description = TextEditingController();
+  final _title = TextEditingController();
+  final _rewardsFocus = FocusNode();
+  final _descriptionFocus = FocusNode();
+  final _questLocationFocus = FocusNode();
+  final _titleFocus = FocusNode();
   final _quest = Quest.empty();
 
   @override
@@ -27,14 +37,20 @@ class _AddQuestPageState extends State<AddQuestPage> {
 
   @override
   void dispose() {
-    _startLoc.dispose();
-    _startLocFocus.dispose();
+    _questLocation.dispose();
+    _questLocationFocus.dispose();
+    _rewards.dispose();
+    _rewardsFocus.dispose();
+    _description.dispose();
+    _descriptionFocus.dispose();
+    _title.dispose();
+    _titleFocus.dispose();
     super.dispose();
   }
 
   void _setStartLocation(MapModel? location) => setState(() {
-        _quest.startLocation = location;
-        _startLoc.text = location?.addr ?? "";
+        _quest.mapModel = location;
+        _questLocation.text = location?.addr ?? "";
       });
 
   @override
@@ -45,10 +61,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
       appBar: AppBar(title: const Text("Create Quest")),
       body: KeyboardDismissOnTap(
         dismissOnCapturedTaps: true,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: _body(),
-        ),
+        child: _body(),
       ),
     );
   }
@@ -58,7 +71,17 @@ class _AddQuestPageState extends State<AddQuestPage> {
           visible: !isKeyboardVisible,
           child: FloatingActionButton.extended(
             heroTag: "FAB",
-            onPressed: () => false,
+            onPressed: () async {
+              final form = _formKey.currentState;
+              if (form?.validate() ?? false) {
+                form?.save();
+                LoadingOverlay.build(context);
+                _quest.create().whenComplete(() {
+                  LoadingOverlay.pop();
+                  Navigator.pop(context);
+                });
+              }
+            },
             label: Row(
               children: const [
                 Icon(Icons.add, color: PeanutTheme.almostBlack),
@@ -70,35 +93,94 @@ class _AddQuestPageState extends State<AddQuestPage> {
         ),
       );
 
-  Widget _body() => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _startLocation(),
-          ],
+  Widget _body() => Form(
+        key: _formKey,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _titleField(),
+              const SizedBox(height: 20),
+              _questLocationField(),
+              const SizedBox(height: 20),
+              _rewardsField(),
+              const SizedBox(height: 20),
+              Expanded(child: _descriptionField()),
+              KeyboardVisibilityBuilder(
+                builder: (_, isKeyboardVisible) => Visibility(
+                  visible: !isKeyboardVisible,
+                  child: const SizedBox(height: 75),
+                ),
+              ),
+            ],
+          ),
         ),
       );
 
-  Widget _startLocation() => Hero(
-        tag: "start_location",
+  Widget _titleField() => PeanutTextFormField(
+        controller: _title,
+        focus: _titleFocus,
+        maxLength: Configs.emailCharLimit,
+        nextFocus: _questLocationFocus,
+        label: "Quest Title",
+        enableTitleCase: true,
+        validator: (value) => value == null || value.isEmpty ? "Required" : null,
+        onSave: (value) => _quest.title = value?.trim(),
+      );
+
+  Widget _questLocationField() => Hero(
+        tag: "quest_location",
         child: Material(
           type: MaterialType.transparency,
           child: PeanutTextFormField(
             tooltipMsg: "This will determine your quest marker",
-            controller: _startLoc,
-            focus: _startLocFocus,
-            hint: "Start Location",
+            controller: _questLocation,
+            focus: _questLocationFocus,
+            nextFocus: _rewardsFocus,
+            label: "Quest Location",
             suffixIcon: const Icon(Icons.arrow_circle_right_rounded, color: PeanutTheme.almostBlack),
             validator: (value) => value == null || value.isEmpty ? "Required" : null,
             readOnly: true,
-            onTap: () async => await Navigation.push(context, MapSelectionPage.routeName, args: [_quest.startLocation, _setStartLocation]),
+            onTap: () async =>
+                await Navigation.push(context, MapSelectionPage.routeName, args: [_quest.mapModel, _setStartLocation]).whenComplete(() => FocusScope.of(context).requestFocus(_rewardsFocus)),
           ),
         ),
+      );
+
+  Widget _rewardsField() => PeanutTextFormField(
+        tooltipMsg: "Rewards for question completion",
+        controller: _rewards,
+        focus: _rewardsFocus,
+        nextFocus: _descriptionFocus,
+        label: "Rewards",
+        numbersOnly: true,
+        prefixIcon: Image.asset(
+          "assets/currency.png",
+          fit: BoxFit.scaleDown,
+          scale: 35,
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) return "Required";
+          if (int.tryParse(value) == null) return "Invalid value";
+          if (int.parse(value) < 1) return "Minimum of 1 Peanut is required";
+          return null;
+        },
+        onSave: (value) => _quest.rewards = int.parse(value!),
+      );
+
+  Widget _descriptionField() => PeanutTextFormField(
+        controller: _description,
+        focus: _descriptionFocus,
+        hint: "Describe the instructions and\nobjectives of your quest..",
+        isDescription: true,
+        validator: (value) => value == null || value.isEmpty ? "Required" : null,
+        onSave: (value) => _quest.description = value,
       );
 }
 
 class PeanutTextFormField extends StatelessWidget {
+  final String? label;
   final String? hint;
   final String? tooltipMsg;
 
@@ -108,6 +190,8 @@ class PeanutTextFormField extends StatelessWidget {
 
   final bool readOnly;
   final bool enableTitleCase;
+  final bool numbersOnly;
+  final bool isDescription;
 
   final FocusNode? focus;
   final FocusNode? nextFocus;
@@ -115,6 +199,7 @@ class PeanutTextFormField extends StatelessWidget {
   final TextEditingController? controller;
 
   final Widget? suffixIcon;
+  final Widget? prefixIcon;
 
   final String? Function(String? value)? validator;
   final void Function()? onTap;
@@ -127,13 +212,17 @@ class PeanutTextFormField extends StatelessWidget {
     this.maxLine = 1,
     this.minLine,
     this.maxLength,
+    this.label,
     this.hint,
     this.tooltipMsg,
     this.readOnly = false,
     this.enableTitleCase = false,
+    this.numbersOnly = false,
+    this.isDescription = false,
     this.focus,
     this.nextFocus,
     this.suffixIcon,
+    this.prefixIcon,
     this.validator,
     this.onTap,
     this.onChange,
@@ -144,8 +233,15 @@ class PeanutTextFormField extends StatelessWidget {
         filled: true,
         fillColor: PeanutTheme.white,
         border: const OutlineInputBorder(),
-        labelText: hint,
+        labelText: label,
+        hintText: hint,
         suffixIcon: suffixIcon,
+        prefixIcon: prefixIcon,
+        counterText: "",
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: PeanutTheme.errorColor),
+        ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: PeanutTheme.errorColor),
@@ -178,22 +274,33 @@ class PeanutTextFormField extends StatelessWidget {
   }
 
   Widget textFormField(BuildContext context) => TextFormField(
+        expands: isDescription,
+        textAlignVertical: TextAlignVertical.top,
         controller: controller,
         readOnly: readOnly,
         autofocus: false,
         focusNode: focus,
-        maxLines: maxLine,
+        maxLines: isDescription ? null : maxLine,
         minLines: minLine,
-        maxLength: maxLength,
+        maxLength: isDescription ? Configs.descriptionCharLimit : maxLength,
         style: const TextStyle(color: PeanutTheme.almostBlack),
         decoration: decoration(),
+        keyboardType: isDescription
+            ? TextInputType.multiline
+            : numbersOnly
+                ? TextInputType.number
+                : null,
         textCapitalization: enableTitleCase ? TextCapitalization.words : TextCapitalization.none,
-        inputFormatters: enableTitleCase ? [TitleCaseTextFormatter()] : null,
+        inputFormatters: enableTitleCase
+            ? [TitleCaseTextFormatter()]
+            : numbersOnly
+                ? [FilteringTextInputFormatter.digitsOnly]
+                : null,
         onFieldSubmitted: (_) => onFieldSubmitted(context),
         onTap: onTap,
-        onChanged: onChange,
-        onSaved: onSave,
-        validator: validator,
+        onChanged: onChange == null ? null : (value) => onChange!(value.trim()),
+        onSaved: onSave == null ? null : (value) => onSave!(value?.trim()),
+        validator: validator == null ? null : (value) => validator!(value?.trim()),
       );
 
   Widget tooltip() => Tooltip(

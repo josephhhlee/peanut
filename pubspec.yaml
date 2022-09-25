@@ -68,6 +68,8 @@ dependencies:
   loading_animation_widget: ^1.2.0+3
   flutter_google_places_sdk: ^0.3.2+2
   easy_rich_text: ^1.1.0
+  dart_geohash: ^2.0.2
+  google_maps_cluster_manager: ^3.0.0+1
 
 dev_dependencies:
   flutter_test:
@@ -95,6 +97,7 @@ flutter:
   assets:
     - assets/entrance_background.jpg
     - assets/google_logo.png
+    - assets/currency.png
     - assets/themes/theme1.json
     - assets/themes/theme2.json
     - assets/themes/theme3.json

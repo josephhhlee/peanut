@@ -13,8 +13,8 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Ui/MainPages/add_quest_page.dart';
-import 'package:peanut/Utils/common_utils.dart';
 import 'dart:developer';
+import 'package:peanut/Utils/loading_utils.dart';
 
 class MapSelectionPage extends StatefulWidget {
   static const routeName = "/map-selection";
@@ -227,7 +227,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   Widget _map() => SizedBox(
         width: double.infinity,
         child: _selectedAddr == null
-            ? CommonUtils.loadingIndicator()
+            ? Loading.loadingIndicator()
             : Stack(
                 alignment: Alignment.center,
                 children: [
@@ -272,12 +272,12 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       );
 
   Widget _location() => Hero(
-        tag: "start_location",
+        tag: "quest_location",
         child: Material(
           type: MaterialType.transparency,
           child: PeanutTextFormField(
             controller: _fieldController,
-            hint: "Search Location",
+            label: "Search Location",
             focus: _fieldFocus,
             enableTitleCase: true,
             onChange: _onFieldChanged,

@@ -60,7 +60,7 @@ class AuthenticationService {
       if (signup) {
         await _auth.createUserWithEmailAndPassword(email: email, password: password);
         final nutUser = NutUser(uid: _auth.currentUser!.uid, displayName: TextUtil.convertTitleCase(displayName!), email: email.toLowerCase());
-        await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
         await _auth.currentUser?.sendEmailVerification();
       } else {
         await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -86,12 +86,12 @@ class AuthenticationService {
       final oauthCredential = OAuthProvider("apple.com").credential(idToken: credential.identityToken);
       final authResult = await _auth.signInWithCredential(oauthCredential);
       final user = authResult.user;
-      final doc = await FirestoreService.users.doc(user!.uid).get();
+      final doc = await FirestoreService.usersCol.doc(user!.uid).get();
       final userExist = doc.exists;
 
       if (signup && !userExist) {
         final nutUser = NutUser(displayName: TextUtil.convertTitleCase(credential.givenName!), email: credential.email!.toLowerCase(), uid: user.uid, verified: true);
-        await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
       }
 
       log("Logged In with - ${user.uid}");
@@ -112,12 +112,12 @@ class AuthenticationService {
 
       final userCredential = await _auth.signInWithCredential(GoogleAuthProvider.credential(idToken: (await account.authentication).idToken, accessToken: (await account.authentication).accessToken));
       final user = userCredential.user;
-      final doc = await FirestoreService.users.doc(user!.uid).get();
+      final doc = await FirestoreService.usersCol.doc(user!.uid).get();
       final userExist = doc.exists;
 
       if (signup && !userExist) {
         final nutUser = NutUser(displayName: TextUtil.convertTitleCase(user.displayName!), email: user.email!.toLowerCase(), uid: user.uid, verified: true);
-        await FirestoreService.users.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
       }
 
       log("Logged In with - ${user.uid}");
