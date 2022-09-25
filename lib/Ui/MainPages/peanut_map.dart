@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
 
 class PeanutMap extends StatefulWidget {
@@ -12,23 +13,28 @@ class PeanutMap extends StatefulWidget {
 }
 
 class _PeanutMapState extends State<PeanutMap> {
-  GoogleMapController? controller;
+  GoogleMapController? _controller;
 
   @override
   void initState() {
     DataStore().addLocationListener((location) {
       final lat = location?.latitude;
       final lng = location?.longitude;
-      controller?.animateCamera(CameraUpdate.newLatLng(LatLng(lat!, lng!)));
+      _controller?.animateCamera(CameraUpdate.newLatLng(LatLng(lat!, lng!)));
     });
     super.initState();
   }
 
   @override
   void dispose() {
-    controller?.dispose();
-    controller = null;
+    _controller?.dispose();
+    _controller = null;
     super.dispose();
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _controller = controller;
+    controller.setMapStyle(DataStore().mapTheme);
   }
 
   @override
@@ -40,19 +46,16 @@ class _PeanutMapState extends State<PeanutMap> {
     return Stack(
       children: [
         GoogleMap(
-          onMapCreated: (controller) {
-            this.controller = controller;
-            controller.setMapStyle(DataStore().mapTheme);
-          },
+          initialCameraPosition: CameraPosition(target: LatLng(lat!, lng!), zoom: Configs.mapZoomLevel),
           mapType: MapType.normal,
           myLocationButtonEnabled: false,
           myLocationEnabled: false,
-          initialCameraPosition: CameraPosition(target: LatLng(lat!, lng!), zoom: 15),
           zoomGesturesEnabled: false,
           scrollGesturesEnabled: false,
           rotateGesturesEnabled: true,
           tiltGesturesEnabled: false,
           zoomControlsEnabled: false,
+          onMapCreated: _onMapCreated,
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
             Factory<OneSequenceGestureRecognizer>(
               () => EagerGestureRecognizer(),

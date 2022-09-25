@@ -1,5 +1,5 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'dart:developer';
+import 'package:peanut/Services/firestore_service.dart';
 
 class Configs {
   static Configs? _instance;
@@ -15,19 +15,39 @@ class Configs {
     this.env = env;
   }
 
-  static late int? displayNameCharLimit;
-  static late int? emailCharLimit;
-  static late int? passwordCharLimit;
-  static late int? emailTimer;
+  static late int displayNameCharLimit;
+  static late int emailCharLimit;
+  static late int passwordCharLimit;
+  static late int verificationResendTimer;
+  static late double mapZoomLevel;
+  static late String googleMapsApi;
+  static late String androidBundleId;
+  static late String androidSHA1;
+  static late String googleAndroidApi;
+  static bool pause = false;
 
   static Future<void> initRemoteConfig() async {
-    FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
-    await remoteConfig.fetchAndActivate();
+    try {
+      final doc = await FirestoreService.configs.get();
+      final map = doc.data();
+      final charLimits = Map.from(map!["character_limits"]);
+      final timers = Map.from(map["timers"]);
+      final maps = Map.from(map["maps"]);
+      final android = Map.from(map["android"]);
 
-    displayNameCharLimit = remoteConfig.getInt("display_name_character_limit");
-    emailCharLimit = remoteConfig.getInt("email_character_limit");
-    passwordCharLimit = remoteConfig.getInt("password_character_limit");
-    emailTimer = remoteConfig.getInt("email_timer");
+      displayNameCharLimit = charLimits["display_name"];
+      emailCharLimit = charLimits["email"]!;
+      passwordCharLimit = charLimits["password"]!;
+      verificationResendTimer = timers["verification_resend"];
+      mapZoomLevel = maps["zoom"].toDouble();
+      googleMapsApi = maps["api"];
+      androidBundleId = android["bundle_id"];
+      androidSHA1 = android["signing_sha1"];
+      googleAndroidApi = android["google_api"];
+    } catch (e) {
+      log(e.toString());
+      pause = true;
+    }
   }
 
   bool connected = false;

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
@@ -28,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _resetEmail = TextEditingController();
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
-  final FocusNode _resetFocusNode = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isResetPassword = false;
@@ -41,7 +41,6 @@ class _LoginPageState extends State<LoginPage> {
     _resetEmail.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
-    _resetFocusNode.dispose();
     super.dispose();
   }
 
@@ -56,9 +55,8 @@ class _LoginPageState extends State<LoginPage> {
             backgroundColor: PeanutTheme.transparent,
             body: PeanutTheme.background(
               Center(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onPanDown: (_) => FocusScope.of(context).unfocus(),
+                child: KeyboardDismissOnTap(
+                  dismissOnCapturedTaps: true,
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Container(
@@ -113,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                   _backButton(),
                   _title("Password Reset", "Enter Registered Email to Continue", displaySignUp: false),
                   const SizedBox(height: 45),
-                  _textForm("Email", _resetEmail, _resetFocusNode),
+                  _textForm("Email", _resetEmail, null, null),
                   const SizedBox(height: 45),
                   _mainButton("reset"),
                 ]
@@ -122,9 +120,9 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 45),
                   _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
                   _or(),
-                  _textForm("Email", _emailController, _emailFocusNode),
+                  _textForm("Email", _emailController, _emailFocusNode, _passwordFocusNode),
                   const SizedBox(height: 20),
-                  _textForm("Password", _passwordController, _passwordFocusNode),
+                  _textForm("Password", _passwordController, _passwordFocusNode, null),
                   const SizedBox(height: 45),
                   _mainButton("sign in"),
                   _forgotPW(),
@@ -178,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _textForm(String hint, TextEditingController controller, FocusNode focusNode) {
+  Widget _textForm(String hint, TextEditingController controller, FocusNode? focus, FocusNode? nextFocus) {
     Widget suffixIcon = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -211,12 +209,13 @@ class _LoginPageState extends State<LoginPage> {
     return TextFormField(
       autofocus: false,
       controller: controller,
-      focusNode: focusNode,
+      focusNode: focus,
       maxLength: length,
       obscureText: hint == "Password" && !_showPassword,
       style: const TextStyle(color: PeanutTheme.almostBlack),
       decoration: InputDecoration(
         filled: true,
+        counterText: "",
         fillColor: PeanutTheme.white,
         border: const OutlineInputBorder(),
         labelText: hint,
@@ -228,6 +227,10 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
+      onFieldSubmitted: (term) {
+        focus?.unfocus();
+        if (nextFocus != null) FocusScope.of(context).requestFocus(nextFocus);
+      },
       validator: (value) => value!.isEmpty ? "Required" : null,
     );
   }

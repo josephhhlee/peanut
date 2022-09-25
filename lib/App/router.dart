@@ -11,6 +11,7 @@ import 'package:peanut/Ui/General/page_not_found_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Ui/Global/home_page.dart';
 import 'package:peanut/Ui/MainPages/add_quest_page.dart';
+import 'package:peanut/Ui/MainPages/map_selection_page.dart';
 import 'package:peanut/Utils/animation_utils.dart';
 import 'package:velocity_x/velocity_x.dart';
 
@@ -34,19 +35,20 @@ class InformationParser extends VxInformationParser {
 class PeanutRouter {
   static Map<Pattern, Page Function(Uri, dynamic)> routes() {
     return {
-      SplashScreenPage.routeName: (_, __) => const MaterialPage(child: SplashScreenPage()),
-      LoginPage.routeName: (_, __) => const MaterialPage(child: LoginPage()),
-      SignUpPage.routeName: (_, __) => const MaterialPage(child: SignUpPage()),
-      HomePage.routeName: (_, __) => const MaterialPage(child: HomePage()),
-      PageNotFoundPage.routeName: (_, __) => const MaterialPage(child: PageNotFoundPage()),
-      NoNetworkPage.routeName: (_, __) => const MaterialPage(child: NoNetworkPage()),
-      MaintenancePage.routeName: (_, __) => const MaterialPage(child: MaintenancePage()),
-      AddQuestPage.routeName: (_, __) => VxRoutePage(child: const AddQuestPage(), transition: fabTransition),
-      VerifyPage.routeName: (_, arg) => MaterialPage(child: VerifyPage(arg)),
+      SplashScreenPage.routeName: (_, __) => PeanutPage(child: const SplashScreenPage(), pageName: SplashScreenPage.routeName),
+      LoginPage.routeName: (_, __) => PeanutPage(child: const LoginPage(), pageName: LoginPage.routeName),
+      SignUpPage.routeName: (_, __) => PeanutPage(child: const SignUpPage(), pageName: SignUpPage.routeName),
+      HomePage.routeName: (_, __) => PeanutPage(child: const HomePage(), pageName: HomePage.routeName),
+      PageNotFoundPage.routeName: (_, __) => PeanutPage(child: const PageNotFoundPage(), pageName: PageNotFoundPage.routeName),
+      NoNetworkPage.routeName: (_, __) => PeanutPage(child: const NoNetworkPage(), pageName: NoNetworkPage.routeName),
+      MaintenancePage.routeName: (_, __) => PeanutPage(child: const MaintenancePage(), pageName: MaintenancePage.routeName),
+      AddQuestPage.routeName: (_, __) => PeanutPage(child: const AddQuestPage(), pageName: AddQuestPage.routeName, transition: _fabTransition),
+      VerifyPage.routeName: (_, arg) => PeanutPage(child: VerifyPage(arg), pageName: VerifyPage.routeName),
+      MapSelectionPage.routeName: (_, arg) => PeanutPage(child: MapSelectionPage(arg), pageName: MapSelectionPage.routeName),
     };
   }
 
-  static Widget fabTransition(Animation<double> animation, Widget child) {
+  static Widget _fabTransition(Animation<double> animation, Widget child) {
     final screenSize = MediaQueryData.fromWindow(WidgetsBinding.instance.window).size;
     return ClipPath(
       clipper: CircularRevealClipper(

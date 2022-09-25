@@ -63,6 +63,11 @@ dependencies:
   adaptive_dialog: ^1.8.0+1
   animations: ^2.0.5
   sprung: ^3.0.1
+  flutter_keyboard_visibility: ^5.3.0
+  geocoding: ^2.0.5
+  loading_animation_widget: ^1.2.0+3
+  flutter_google_places_sdk: ^0.3.2+2
+  easy_rich_text: ^1.1.0
 
 dev_dependencies:
   flutter_test:

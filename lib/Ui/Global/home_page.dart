@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
@@ -6,6 +5,7 @@ import 'package:peanut/App/theme.dart';
 import 'package:peanut/Ui/Global/app_bar.dart';
 import 'package:peanut/Ui/Global/navigation_bar.dart';
 import 'package:peanut/Ui/MainPages/add_quest_page.dart';
+import 'package:peanut/Utils/animation_utils.dart';
 
 class HomePage extends StatefulWidget {
   static const routeName = "/home";
@@ -46,13 +46,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       onWillPop: () => Properties.onBack(context),
       child: Scaffold(
         extendBody: true,
-        floatingActionButton: _fab(),
+        floatingActionButton: _floatingBtn(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         appBar: const PeanutAppBar(),
         bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
         body: ValueListenableBuilder(
           valueListenable: Properties.navigationBarIndex,
-          builder: (_, value, __) => IndexedStack(
+          builder: (_, value, __) => FadeIndexedStack(
             index: value,
             children: Properties.screens,
           ),
@@ -61,20 +61,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _fab() => AnimatedSize(
-        clipBehavior: Clip.antiAlias,
-        curve: Curves.bounceInOut,
-        reverseDuration: const Duration(milliseconds: 200),
-        duration: const Duration(milliseconds: 200),
-        child: ValueListenableBuilder(
-          valueListenable: Properties.navigationBarIndex,
-          builder: (_, value, __) => Visibility(
-            visible: value == 0,
-            child: FloatingActionButton(
-              heroTag: "FAB",
-              tooltip: "Create Quest",
-              onPressed: () async => await Navigation.push(context, AddQuestPage.routeName),
-              child: const Icon(Icons.add, color: PeanutTheme.secondaryColor),
+  Widget _floatingBtn() => ClipOval(
+        child: AnimatedSize(
+          clipBehavior: Clip.antiAlias,
+          curve: Curves.bounceInOut,
+          reverseDuration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 200),
+          child: ValueListenableBuilder(
+            valueListenable: Properties.navigationBarIndex,
+            builder: (_, value, __) => Visibility(
+              visible: value == 0,
+              child: FloatingActionButton(
+                heroTag: "FAB",
+                tooltip: "Create Quest",
+                onPressed: () async => await Navigation.push(context, AddQuestPage.routeName),
+                child: const Icon(Icons.add, color: PeanutTheme.secondaryColor),
+              ),
             ),
           ),
         ),

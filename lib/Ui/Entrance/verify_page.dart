@@ -17,7 +17,7 @@ class VerifyPage extends StatelessWidget {
   final bool? enableReset;
   final _auth = FirebaseAuth.instance;
   final ValueNotifier<int> _count = ValueNotifier(0);
-  final int timer = Configs.emailTimer ?? 60;
+  final int timer = Configs.verificationResendTimer;
 
   void _initTimer(BuildContext context) {
     Timer.periodic(const Duration(seconds: 1), (timer) {

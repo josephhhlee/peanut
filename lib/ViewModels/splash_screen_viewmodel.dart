@@ -3,6 +3,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/Models/user_model.dart';
@@ -15,13 +16,14 @@ class SplashScreenViewModel {
   final datastore = DataStore();
 
   Future<void> init(BuildContext context) async {
+    if (Configs.pause) return;
     final loggedIn = await AuthenticationService.checkForLogin(redirect: true);
     if (loggedIn) {
       await LocationService.init(context);
       await initMapTheme();
       await initCurrentUser();
       DataStore().setDataInitialized(true);
-      Navigation.push(context, HomePage.routeName);
+      Navigation.push(context, HomePage.routeName, clear: true);
     }
   }
 

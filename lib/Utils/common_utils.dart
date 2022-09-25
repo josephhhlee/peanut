@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:peanut/App/theme.dart';
 
 class CommonUtils {
@@ -37,4 +38,13 @@ class CommonUtils {
       toastDuration: Duration(seconds: duration),
     );
   }
+
+  static Widget loadingIndicator({double size = 30}) => Center(
+        child: LoadingAnimationWidget.discreteCircle(
+          color: PeanutTheme.primaryColor,
+          secondRingColor: PeanutTheme.almostBlack,
+          thirdRingColor: PeanutTheme.secondaryColor,
+          size: size,
+        ),
+      );
 }

@@ -15,26 +15,29 @@ class SplashScreenPage extends StatelessWidget {
     final refSize = screenSize.width < screenSize.height ? screenSize.width : screenSize.height;
     final size = refSize / 3;
 
-    return Material(
-      type: MaterialType.transparency,
-      child: Container(
-        height: screenSize.height,
-        width: screenSize.width,
-        alignment: Alignment.center,
-        color: PeanutTheme.primaryColor,
-        child: Stack(
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          height: screenSize.height,
+          width: screenSize.width,
           alignment: Alignment.center,
-          children: [
-            Image.asset(
-              "assets/entrance_background.jpg",
-              width: size,
-              height: size,
-            ),
-            const Text(
-              "PEANUT",
-              style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white),
-            ),
-          ],
+          color: PeanutTheme.primaryColor,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.asset(
+                "assets/entrance_background.jpg",
+                width: size,
+                height: size,
+              ),
+              const Text(
+                "PEANUT",
+                style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white),
+              ),
+            ],
+          ),
         ),
       ),
     );

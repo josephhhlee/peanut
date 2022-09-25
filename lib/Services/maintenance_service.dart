@@ -10,7 +10,7 @@ import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 class MaintenanceService {
   static late final StreamSubscription<DocumentSnapshot>? listener;
 
-  static StreamSubscription<void> init() => listener = FirestoreService.appConfigs.doc("maintenance").snapshots().listen(_updateMaintenanceStatus);
+  static StreamSubscription<void> init() => listener = FirestoreService.maintenance.snapshots().listen(_updateMaintenanceStatus);
 
   static void _updateMaintenanceStatus(DocumentSnapshot doc) async {
     final platformActivate = Platform.isIOS ? "activateIOS" : "activateAndroid";
