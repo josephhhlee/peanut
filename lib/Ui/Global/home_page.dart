@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_portal/flutter_portal.dart';
 import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
@@ -44,17 +45,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () => Properties.onBack(context),
-      child: Scaffold(
-        extendBody: true,
-        floatingActionButton: _floatingBtn(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        appBar: const PeanutAppBar(),
-        bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
-        body: ValueListenableBuilder(
-          valueListenable: Properties.navigationBarIndex,
-          builder: (_, value, __) => FadeIndexedStack(
-            index: value,
-            children: Properties.screens,
+      child: Portal(
+        child: Scaffold(
+          extendBody: true,
+          floatingActionButton: _floatingBtn(),
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          appBar: const PeanutAppBar(),
+          bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
+          body: ValueListenableBuilder(
+            valueListenable: Properties.navigationBarIndex,
+            builder: (_, value, __) => FadeIndexedStack(
+              index: value,
+              children: Properties.screens,
+            ),
           ),
         ),
       ),

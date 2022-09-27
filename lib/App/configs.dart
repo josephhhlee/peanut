@@ -21,11 +21,13 @@ class Configs {
   static late int descriptionCharLimit;
   static late int verificationResendTimer;
   static late int geohashPrecision;
+  static late int cacheExpiry;
   static late double mapZoomLevel;
   static late String googleMapsApi;
   static late String androidBundleId;
   static late String androidSHA1;
   static late String googleAndroidApi;
+  static late bool enableSuggestions;
   static bool pause = false;
 
   static Future<void> initRemoteConfig() async {
@@ -42,9 +44,11 @@ class Configs {
       passwordCharLimit = charLimits["password"]!;
       descriptionCharLimit = charLimits["description"];
       verificationResendTimer = timers["verification_resend"];
+      cacheExpiry = (timers["cache_expiry_in_minutes"] * 60000);
       mapZoomLevel = maps["zoom"].toDouble();
       googleMapsApi = maps["api"];
       geohashPrecision = maps["geohash_precision"];
+      enableSuggestions = maps["enable_suggestions"];
       androidBundleId = android["bundle_id"];
       androidSHA1 = android["signing_sha1"];
       googleAndroidApi = android["google_api"];

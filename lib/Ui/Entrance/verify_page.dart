@@ -34,9 +34,7 @@ class VerifyPage extends StatelessWidget {
     }
     if (_auth.currentUser?.emailVerified ?? false) {
       timer.cancel();
-      await FirestoreService.usersCol.doc(_auth.currentUser?.uid).update({"verified": true});
-      // ignore: use_build_context_synchronously
-      Navigation.push(context, SplashScreenPage.routeName, clear: true);
+      await FirestoreService.usersCol.doc(_auth.currentUser?.uid).update({"verified": true}).then((_) => Navigation.push(context, SplashScreenPage.routeName, clear: true));
     }
   }
 

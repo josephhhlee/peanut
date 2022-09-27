@@ -290,7 +290,11 @@ class PeanutTextFormField extends StatelessWidget {
             : numbersOnly
                 ? TextInputType.number
                 : null,
-        textCapitalization: enableTitleCase ? TextCapitalization.words : TextCapitalization.none,
+        textCapitalization: enableTitleCase
+            ? TextCapitalization.words
+            : isDescription
+                ? TextCapitalization.sentences
+                : TextCapitalization.none,
         inputFormatters: enableTitleCase
             ? [TitleCaseTextFormatter()]
             : numbersOnly

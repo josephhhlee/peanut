@@ -9,6 +9,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
+import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
@@ -34,6 +35,8 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   final _fieldFocus = FocusNode();
   final List<String> _suggestions = [];
   late final MapModel? _initialAddr;
+  late final List<String> _abbre;
+  late final List<String> _abbreInFull;
 
   List<String> _searchWords = [];
   MapModel? _selectedAddr;
@@ -42,6 +45,8 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
 
   @override
   void initState() {
+    _abbre = MapProperties.streetAbbreviations.keys.toList();
+    _abbreInFull = MapProperties.streetAbbreviations.values.toList();
     _init();
     super.initState();
   }
@@ -72,7 +77,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   Future<MapModel> _getAddr(double lat, double lng) async {
     final placemarks = await placemarkFromCoordinates(lat, lng, localeIdentifier: "en");
     final main = placemarks.first;
-    final addr = "${main.street}, ${main.postalCode}, ${main.country}".replaceAll(", ,", ", ");
+    final addr = "${main.street}, ${main.postalCode}, ${main.country}".replaceAll(", ,", ",");
 
     return MapModel(addr: addr, lat: lat, lng: lng);
   }
@@ -93,15 +98,22 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   Future<void> _getSuggestions(String addr) async {
     int matches(String result) {
       int count = 0;
+
       for (var word in _searchWords) {
+        final index = _abbre.indexWhere((e) => e == word);
+        if (index != -1) {
+          if (result.contains(_abbre[index]) || result.contains(_abbreInFull[index])) count++;
+        }
+
         if (result.contains(word)) count++;
       }
+
       return count;
     }
 
     Future<void> buildSuggestionsOnMatches(predictions, int reqMatch) async {
       for (final location in predictions) {
-        if (_suggestions.length >= 6) break;
+        if (_suggestions.length >= 8) break;
 
         final addr = location.fullText;
 
@@ -118,11 +130,11 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
 
     try {
       final result = await _googlePlace.findAutocompletePredictions(addr, countries: ["SG"], newSessionToken: false);
-      _searchWords = addr.trim().replaceAll(",", " ").split(" ");
+      _searchWords = addr.trim().replaceAll(",", "").split(" ");
       _suggestions.clear();
 
       for (int i = _searchWords.length; i > 0; i--) {
-        if (_suggestions.length >= 6) break;
+        if (_suggestions.length >= 8) break;
         await buildSuggestionsOnMatches(result.predictions, i);
       }
     } catch (e) {
@@ -259,8 +271,8 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
         child: Column(
           children: [
             _selectedAddress(),
-            _location(),
-            _suggestionsBox(),
+            if (Configs.enableSuggestions) _locationField(),
+            if (Configs.enableSuggestions) _suggestionsBox(),
             KeyboardVisibilityBuilder(
               builder: (_, isKeyboardVisible) => Visibility(
                 visible: !isKeyboardVisible,
@@ -271,7 +283,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
         ),
       );
 
-  Widget _location() => Hero(
+  Widget _locationField() => Hero(
         tag: "quest_location",
         child: Material(
           type: MaterialType.transparency,
@@ -315,9 +327,25 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       );
 
   Widget _suggestionsBox() {
-    var list = [..._suggestions];
-    list = list.toSet().toList();
+    final list = _suggestions;
     if (list.isEmpty) return const SizedBox.shrink();
+
+    final patternList = _searchWords
+        .map((e) => EasyRichTextPattern(
+              targetString: e,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ))
+        .toList();
+
+    for (var word in _searchWords) {
+      final index = _abbre.indexWhere((abbr) => word == abbr);
+      if (index != -1) {
+        patternList.add(EasyRichTextPattern(
+          targetString: _abbreInFull[index],
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ));
+      }
+    }
 
     return Container(
       constraints: BoxConstraints(minHeight: 100, maxHeight: MediaQuery.of(context).size.height * 0.2),
@@ -336,18 +364,14 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
         itemBuilder: (_, index) => InkWell(
           onTap: () async => await _onAddrSelect(list[index]),
           child: Container(
-            key: Key(list[index]),
-            width: double.infinity,
-            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider, width: 0.5))),
-            padding: const EdgeInsets.all(20),
-            child: EasyRichText(list[index],
-                patternList: _searchWords
-                    .map((e) => EasyRichTextPattern(
-                          targetString: e,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ))
-                    .toList()),
-          ),
+              key: Key(list[index]),
+              width: double.infinity,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider, width: 0.5))),
+              padding: const EdgeInsets.all(20),
+              child: EasyRichText(
+                list[index],
+                patternList: patternList,
+              )),
         ),
       ),
     );

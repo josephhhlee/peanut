@@ -26,9 +26,14 @@ class AuthenticationService {
     }
 
     try {
-      var currentUser = _auth.currentUser;
+      final currentUser = _auth.currentUser;
       if (currentUser == null) return await handleNullUser();
       if (currentUser.providerData.first.providerId == EmailAuthProvider.PROVIDER_ID && !currentUser.emailVerified) return handleUnverifiedUser();
+      if (redirect) {
+        //Double check that user doc exist
+        final doc = await FirestoreService.usersCol.doc(currentUser.uid).get();
+        if (!doc.exists) return await handleNullUser();
+      }
 
       return true;
     } catch (e) {
@@ -59,7 +64,12 @@ class AuthenticationService {
 
       if (signup) {
         await _auth.createUserWithEmailAndPassword(email: email, password: password);
-        final nutUser = NutUser(uid: _auth.currentUser!.uid, displayName: TextUtil.convertTitleCase(displayName!), email: email.toLowerCase());
+        final nutUser = NutUser(
+          uid: _auth.currentUser!.uid,
+          displayName: TextUtil.convertTitleCase(displayName!),
+          email: email.toLowerCase(),
+          createdOn: DateTime.now().millisecondsSinceEpoch,
+        );
         await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
         await _auth.currentUser?.sendEmailVerification();
       } else {
@@ -90,7 +100,13 @@ class AuthenticationService {
       final userExist = doc.exists;
 
       if (signup && !userExist) {
-        final nutUser = NutUser(displayName: TextUtil.convertTitleCase(credential.givenName!), email: credential.email!.toLowerCase(), uid: user.uid, verified: true);
+        final nutUser = NutUser(
+          displayName: TextUtil.convertTitleCase(credential.givenName!),
+          email: credential.email!.toLowerCase(),
+          uid: user.uid,
+          verified: true,
+          createdOn: DateTime.now().millisecondsSinceEpoch,
+        );
         await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
       }
 
@@ -116,7 +132,13 @@ class AuthenticationService {
       final userExist = doc.exists;
 
       if (signup && !userExist) {
-        final nutUser = NutUser(displayName: TextUtil.convertTitleCase(user.displayName!), email: user.email!.toLowerCase(), uid: user.uid, verified: true);
+        final nutUser = NutUser(
+          displayName: TextUtil.convertTitleCase(user.displayName!),
+          email: user.email!.toLowerCase(),
+          uid: user.uid,
+          verified: true,
+          createdOn: DateTime.now().millisecondsSinceEpoch,
+        );
         await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
       }
 

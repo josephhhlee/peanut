@@ -17,7 +17,7 @@ class PeanutNavigationBar extends StatelessWidget {
       builder: (_, value, __) => AnimatedBottomNavigationBar.builder(
         activeIndex: value,
         gapLocation: GapLocation.center,
-        notchSmoothness: NotchSmoothness.verySmoothEdge,
+        notchSmoothness: NotchSmoothness.smoothEdge,
         onTap: (index) => Properties.navigationBarIndex.value = index,
         backgroundColor: PeanutTheme.almostBlack,
         borderColor: PeanutTheme.secondaryColor,

@@ -1,10 +1,10 @@
-import 'dart:ui';
+import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:peanut/App/theme.dart';
+import 'package:peanut/Models/user_model.dart';
 
 class CommonUtils {
   static void toast(
@@ -42,38 +42,39 @@ class CommonUtils {
     );
   }
 
-  static Future<Marker> Function(Cluster) get markerBuilder => (cluster) async {
-        Future<BitmapDescriptor> getClusterBitmap(int size, {String? text}) async {
-          final PictureRecorder pictureRecorder = PictureRecorder();
-          final Canvas canvas = Canvas(pictureRecorder);
-          final Paint paint1 = Paint()..color = PeanutTheme.almostBlack;
-
-          canvas.drawCircle(Offset(size / 2, size / 2), size / 2.0, paint1);
-
-          if (text != null) {
-            TextPainter painter = TextPainter(textDirection: TextDirection.ltr);
-            painter.text = TextSpan(
-              text: text,
-              style: TextStyle(fontSize: size / 3, color: Colors.white, fontWeight: FontWeight.normal),
-            );
-            painter.layout();
-            painter.paint(
-              canvas,
-              Offset(size / 2 - painter.width / 2, size / 2 - painter.height / 2),
-            );
-          }
-
-          final img = await pictureRecorder.endRecording().toImage(size, size);
-          final data = await img.toByteData(format: ImageByteFormat.png);
-
-          return BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
-        }
-
-        return Marker(
-          markerId: MarkerId(cluster.getId()),
-          position: cluster.location,
-          onTap: () {},
-          icon: await getClusterBitmap(cluster.isMultiple ? 125 : 75, text: cluster.isMultiple ? cluster.count.toString() : "1"),
+  static Widget buildUserImage({required BuildContext context, required NutUser user, double size = 65, bool allowGesture = true}) {
+    final color = Color(user.uid.hashCode * 0xffffffff);
+    Widget backGround({required Widget child}) => ClipRRect(
+          borderRadius: BorderRadius.circular(size * 0.4),
+          child: Container(
+            height: size,
+            width: size,
+            color: color,
+            alignment: Alignment.center,
+            child: child,
+          ),
         );
-      };
+
+    if (user.displayPhoto != null && user.displayPhoto!.isNotEmpty) {
+      final String imageUrl = user.displayPhoto!;
+      return backGround(
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.contain,
+        ),
+      );
+    }
+
+    var abbrName = user.displayName.split(" ").map((e) => e[0]).join().toUpperCase();
+    abbrName = abbrName.substring(0, 3 > abbrName.length ? abbrName.length : 3);
+
+    return backGround(
+      child: Text(
+        abbrName,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white, fontSize: size * 0.3),
+      ),
+    );
+  }
 }

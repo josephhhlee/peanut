@@ -16,7 +16,7 @@ class Loading {
 class LoadingOverlay {
   static BuildContext? _dialogContext;
 
-  static Future build(BuildContext context) async => await showDialog(
+  static void build(BuildContext context) async => await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
