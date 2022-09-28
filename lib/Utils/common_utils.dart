@@ -43,7 +43,7 @@ class CommonUtils {
   }
 
   static Widget buildUserImage({required BuildContext context, required NutUser user, double size = 65, bool allowGesture = true}) {
-    final color = Color(user.uid.hashCode * 0xffffffff);
+    final color = Color(user.uid.hashCode * 0xffffffff).withOpacity(1).withAlpha(255);
     Widget backGround({required Widget child}) => ClipRRect(
           borderRadius: BorderRadius.circular(size * 0.4),
           child: Container(

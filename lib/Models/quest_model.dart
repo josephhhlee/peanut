@@ -32,7 +32,7 @@ class Quest with ClusterItem {
     title = data["title"];
     description = data["description"];
     rewards = data["rewards"];
-    createdOn = data["createdOn"]?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+    createdOn = data["createdOn"]!.millisecondsSinceEpoch;
     expiry = data["expiry"];
     creator = data["creator"];
     taker = data["taker"];

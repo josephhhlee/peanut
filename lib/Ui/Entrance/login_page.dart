@@ -256,13 +256,15 @@ class _LoginPageState extends State<LoginPage> {
           if (!validate!) return;
 
           try {
+            LoadingOverlay.build(context);
             if (button == "reset") {
-              await AuthenticationService.resetPassword(_resetEmail.text);
-              _resetEmail.clear();
-              await showOkAlertDialog(context: context, message: "An email will be sent to your registered email shortly\nPlease check your email");
-              setState(() => _isResetPassword = false);
+              await AuthenticationService.resetPassword(_resetEmail.text).then((_) async {
+                LoadingOverlay.pop();
+                _resetEmail.clear();
+                await showOkAlertDialog(context: context, message: "An email will be sent to your registered email shortly\nPlease check your email.");
+                setState(() => _isResetPassword = false);
+              });
             } else {
-              LoadingOverlay.build(context);
               await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text).then((_) {
                 LoadingOverlay.pop();
                 Navigation.push(context, SplashScreenPage.routeName, clear: true);

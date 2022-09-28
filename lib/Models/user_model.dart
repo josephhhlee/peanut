@@ -20,7 +20,7 @@ class NutUser {
     displayName = data["displayName"];
     displayPhoto = data["displayPhoto"];
     verified = data["verified"];
-    createdOn = data["createdOn"]?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch;
+    createdOn = data["createdOn"]?.millisecondsSinceEpoch;
   }
 
   Map<String, dynamic> toJson() => {

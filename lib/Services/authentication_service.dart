@@ -152,6 +152,8 @@ class AuthenticationService {
 
   static Future<void> resetPassword(String email) async {
     try {
+      final signInMethods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      if (signInMethods.isEmpty) throw "Error with password reset.";
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
       log(e.toString());

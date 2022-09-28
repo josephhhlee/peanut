@@ -142,8 +142,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
             suffixIcon: const Icon(Icons.arrow_circle_right_rounded, color: PeanutTheme.almostBlack),
             validator: (value) => value == null || value.isEmpty ? "Required" : null,
             readOnly: true,
-            onTap: () async =>
-                await Navigation.push(context, MapSelectionPage.routeName, args: [_quest.mapModel, _setStartLocation]).whenComplete(() => FocusScope.of(context).requestFocus(_rewardsFocus)),
+            onTap: () async => await Navigation.push(context, MapSelectionPage.routeName, args: [_quest.mapModel, _setStartLocation]),
           ),
         ),
       );

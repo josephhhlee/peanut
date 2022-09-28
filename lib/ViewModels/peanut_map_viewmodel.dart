@@ -38,7 +38,7 @@ class PeanutMapViewModel {
         return Marker(
           markerId: MarkerId(cluster.getId()),
           position: cluster.location,
-          onTap: () => questList.value = cluster.items.toList(),
+          onTap: () => questList.value = cluster.items.toList()..sort((a, b) => b.createdOn!.compareTo(a.createdOn!)),
           icon: await getClusterBitmap(cluster.isMultiple ? 125 : 75, text: cluster.isMultiple ? cluster.count.toString() : "1"),
         );
       };

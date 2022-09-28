@@ -42,6 +42,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   MapModel? _selectedAddr;
   Timer? _cameraMoveTimer;
   GoogleMapController? _controller;
+  bool _returnPage = false;
 
   @override
   void initState() {
@@ -173,14 +174,20 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
     }
   }
 
-  void _onSubmit() {
+  void _onSubmit() async {
+    if (_returnPage) return;
+
+    setState(() => _returnPage = true);
     widget.args[1](_selectedAddr ?? _initialAddr);
-    Navigation.pop(context);
+    await Future.delayed(const Duration(milliseconds: 300)).then((_) => Navigation.pop(context));
   }
 
-  void _onBack() {
+  void _onBack() async {
+    if (_returnPage) return;
+
+    setState(() => _returnPage = true);
     widget.args[1](_initialAddr);
-    Navigation.pop(context);
+    await Future.delayed(const Duration(milliseconds: 300)).then((_) => Navigation.pop(context));
   }
 
   @override
@@ -267,7 +274,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
       );
 
   Widget _searchField() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           children: [
             _selectedAddress(),
