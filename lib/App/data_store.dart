@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
@@ -22,15 +24,38 @@ class DataStore with ChangeNotifier {
     secureStorage = SecureStorage();
   }
 
+  @override
+  void dispose() {
+    _peanutCurrencyListener?.cancel();
+    super.dispose();
+  }
+
   String? mapTheme;
 
   bool dataInitialised = false;
-  NutUser? currentUser;
+
+  int? currentUserPeanutCurrency;
+  StreamSubscription<DocumentSnapshot>? _peanutCurrencyListener;
+  NutUser? _currentUser;
+  NutUser? get currentUser => _currentUser;
+  set currentUser(NutUser? user) {
+    _currentUser = user;
+    if (user != null) {
+      _peanutCurrencyListener = FirestoreService.getPeanutCurrencyDoc(user.uid).snapshots().listen((doc) {
+        currentUserPeanutCurrency = doc.get("value");
+        notifyListeners();
+      });
+    }
+  }
+
   void setDataInitialized(bool dataInitialised) {
     this.dataInitialised = dataInitialised;
 
     if (!dataInitialised) {
       currentUser = null;
+      currentUserPeanutCurrency = null;
+      _peanutCurrencyListener?.cancel();
+      _peanutCurrencyListener = null;
       Properties.reset();
       secureStorage.clearCache();
     }

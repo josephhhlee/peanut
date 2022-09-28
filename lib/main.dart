@@ -69,6 +69,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     NetworkService.dispose();
     MaintenanceService.dispose();
     LocationService.dispose();
+    DataStore().dispose();
     super.dispose();
   }
 

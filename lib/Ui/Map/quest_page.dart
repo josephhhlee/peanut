@@ -7,6 +7,7 @@ import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:intl/intl.dart';
+import 'package:peanut/Utils/common_utils.dart';
 
 class QuestPage extends StatefulWidget {
   static const routeName = "/quest-page";
@@ -167,16 +168,7 @@ class _QuestPageState extends State<QuestPage> {
             style: TextStyle(color: PeanutTheme.almostBlack, fontSize: 15, fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 5),
-          Text(
-            "${quest.rewards}",
-            style: const TextStyle(color: PeanutTheme.primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 2),
-          Image.asset(
-            "assets/currency.png",
-            fit: BoxFit.scaleDown,
-            scale: 55,
-          ),
+          CommonUtils.peanutCurrency(value: quest.rewards.toString()),
         ],
       );
 

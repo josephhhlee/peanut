@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:peanut/App/configs.dart';
+import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Models/quest_model.dart';
+import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/Map/map_selection_page.dart';
+import 'package:peanut/Utils/common_utils.dart';
 import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/Utils/text_utils.dart';
+import 'dart:developer';
 
 class AddQuestPage extends StatefulWidget {
   static const routeName = "/add-quest";
@@ -53,6 +57,24 @@ class _AddQuestPageState extends State<AddQuestPage> {
         _questLocation.text = location?.addr ?? "";
       });
 
+  Future<bool> _makeDeduction() async {
+    try {
+      final currentUser = DataStore().currentUser;
+      final value = await currentUser!.getPeanutCurrency();
+      final remainingPeanuts = value - (int.parse(_rewards.text) + Configs.questCreateCost);
+
+      if (remainingPeanuts >= 0) {
+        await currentUser.updatePeanutCurrency(remainingPeanuts);
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,19 +96,28 @@ class _AddQuestPageState extends State<AddQuestPage> {
             onPressed: () async {
               final form = _formKey.currentState;
               if (form?.validate() ?? false) {
-                form?.save();
-                LoadingOverlay.build(context);
-                _quest.create().whenComplete(() {
-                  LoadingOverlay.pop();
-                  Navigator.pop(context);
+                await _makeDeduction().then((success) async {
+                  if (success) {
+                    form?.save();
+                    await _quest.create().then((_) {
+                      Navigator.pop(context);
+                    });
+                  } else {
+                    LoadingOverlay.pop();
+                    CommonUtils.toast(context, "Insufficient Peanut(s) to create quest.", backgroundColor: PeanutTheme.errorColor);
+                  }
                 });
               }
             },
             label: Row(
-              children: const [
-                Icon(Icons.add, color: PeanutTheme.almostBlack),
-                SizedBox(width: 10),
-                Text("Create Quest"),
+              children: [
+                const Icon(Icons.add, color: PeanutTheme.almostBlack),
+                const SizedBox(width: 5),
+                const Text("Create Quest"),
+                const SizedBox(width: 10),
+                const Text("(-"),
+                CommonUtils.peanutCurrency(value: ((int.tryParse(_rewards.text) ?? 0) + Configs.questCreateCost).toString()),
+                const Text(")"),
               ],
             ),
           ),

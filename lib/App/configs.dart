@@ -22,6 +22,8 @@ class Configs {
   static late int verificationResendTimer;
   static late int geohashPrecision;
   static late int cacheExpiry;
+  static late int questCreateCost;
+  static late int questDepositCost;
   static late double mapZoomLevel;
   static late String googleMapsApi;
   static late String androidBundleId;
@@ -38,6 +40,7 @@ class Configs {
       final timers = Map.from(map["timers"]);
       final maps = Map.from(map["maps"]);
       final android = Map.from(map["android"]);
+      final currency = Map.from(map["currency"]);
 
       displayNameCharLimit = charLimits["display_name"];
       emailCharLimit = charLimits["email"]!;
@@ -52,6 +55,8 @@ class Configs {
       androidBundleId = android["bundle_id"];
       androidSHA1 = android["signing_sha1"];
       googleAndroidApi = android["google_api"];
+      questCreateCost = currency["create_quest_cost"];
+      questDepositCost = currency["quest_taker_deposit"];
     } catch (e) {
       log(e.toString());
       pause = true;

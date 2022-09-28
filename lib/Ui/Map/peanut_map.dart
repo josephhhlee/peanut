@@ -176,6 +176,18 @@ class _PeanutMapState extends State<PeanutMap> {
         children: [
           _map(),
           if (!_initMarkers) Loading.loadingIndicator(),
+          Positioned(
+            top: 50,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(100),
+                color: PeanutTheme.almostBlack.withOpacity(0.7),
+              ),
+              child: CommonUtils.currentUserPeanutCurrency(color: PeanutTheme.white),
+            ),
+          ),
         ],
       );
 

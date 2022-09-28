@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:peanut/Services/firestore_service.dart';
 
 class NutUser {
   late final String uid;
@@ -31,6 +32,13 @@ class NutUser {
         "verified": verified,
         "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn),
       };
+
+  Future<int> getPeanutCurrency() async {
+    final doc = await FirestoreService.getPeanutCurrencyDoc(uid).get();
+    return doc.get("value");
+  }
+
+  Future<void> updatePeanutCurrency(int value) async => await FirestoreService.getPeanutCurrencyDoc(uid).update({"value": value});
 }
 
 class PrivateData {}

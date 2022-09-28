@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/user_model.dart';
+import 'package:provider/provider.dart';
 
 class CommonUtils {
   static void toast(
@@ -77,4 +79,28 @@ class CommonUtils {
       ),
     );
   }
+
+  static peanutCurrency({String? value, double iconSize = 55, double textSize = 18, Color color = PeanutTheme.almostBlack}) => Row(children: [
+        Text(
+          value ?? "0",
+          style: TextStyle(color: color, fontSize: textSize, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 2),
+        Image.asset(
+          "assets/currency.png",
+          fit: BoxFit.scaleDown,
+          scale: iconSize,
+        ),
+      ]);
+
+  static currentUserPeanutCurrency({double iconSize = 55, double textSize = 18, Color color = PeanutTheme.almostBlack}) => Consumer<DataStore>(
+        builder: (_, value, __) => value.currentUserPeanutCurrency == null
+            ? const SizedBox.shrink()
+            : peanutCurrency(
+                value: value.currentUserPeanutCurrency.toString(),
+                color: color,
+                textSize: textSize,
+                iconSize: iconSize,
+              ),
+      );
 }

@@ -10,4 +10,6 @@ class FirestoreService {
   static final onboardingDoc = appConfigsCol.doc("onboarding");
   static final configsDoc = appConfigsCol.doc("configs");
   static final maintenanceDoc = appConfigsCol.doc("maintenance");
+
+  static DocumentReference getPeanutCurrencyDoc(String uid) => usersCol.doc(uid).collection("currency").doc("peanut");
 }
