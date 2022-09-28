@@ -41,7 +41,7 @@ class Quest with ClusterItem {
   Future<void> create() async {
     final ref = FirestoreService.questsCol.doc();
     id = ref.id;
-    createdOn = DateTime.now().millisecond;
+    createdOn = DateTime.now().millisecondsSinceEpoch;
     await ref.set(toJson());
   }
 

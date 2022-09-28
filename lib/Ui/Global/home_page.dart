@@ -5,7 +5,7 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Ui/Global/app_bar.dart';
 import 'package:peanut/Ui/Global/navigation_bar.dart';
-import 'package:peanut/Ui/MainPages/add_quest_page.dart';
+import 'package:peanut/Ui/Map/add_quest_page.dart';
 import 'package:peanut/Utils/animation_utils.dart';
 
 class HomePage extends StatefulWidget {

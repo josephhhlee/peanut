@@ -8,10 +8,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
+import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
+import 'package:peanut/Ui/Map/quest_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/ViewModels/peanut_map_viewmodel.dart';
@@ -101,6 +103,7 @@ class _PeanutMapState extends State<PeanutMap> {
           builder: (_, value, __) => value == null
               ? const SizedBox.shrink()
               : ListView.builder(
+                  key: Key(value.map((e) => e.toJson().toString()).toString()),
                   padding: const EdgeInsets.all(0),
                   physics: const BouncingScrollPhysics(),
                   shrinkWrap: true,
@@ -112,20 +115,26 @@ class _PeanutMapState extends State<PeanutMap> {
     );
   }
 
-  Widget _questCard(Quest quest) => Container(
+  Widget _questCard(Quest quest) => CachedUserData(
         key: Key(quest.id!),
-        padding: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider))),
-        child: CachedUserData(
-          uid: quest.creator,
-          builder: (user) => Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CommonUtils.buildUserImage(context: context, user: user, size: 65),
-              const SizedBox(width: 15),
-              Flexible(fit: FlexFit.tight, child: _questDetails(quest, user)),
-            ],
+        uid: quest.creator,
+        builder: (user) => Material(
+          child: InkWell(
+            highlightColor: PeanutTheme.primaryColor.withOpacity(0.5),
+            onTap: () => Navigation.push(context, QuestPage.routeName, args: [user, quest]),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider))),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CommonUtils.buildUserImage(context: context, user: user, size: 65),
+                  const SizedBox(width: 15),
+                  Flexible(fit: FlexFit.tight, child: _questDetails(quest, user)),
+                ],
+              ),
+            ),
           ),
         ),
       );
@@ -158,7 +167,7 @@ class _PeanutMapState extends State<PeanutMap> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       );
 
@@ -182,11 +191,11 @@ class _PeanutMapState extends State<PeanutMap> {
       myLocationButtonEnabled: false,
       myLocationEnabled: true,
       compassEnabled: true,
-      zoomGesturesEnabled: false,
-      scrollGesturesEnabled: false,
       rotateGesturesEnabled: true,
-      tiltGesturesEnabled: false,
+      zoomGesturesEnabled: false,
       zoomControlsEnabled: false,
+      scrollGesturesEnabled: false,
+      tiltGesturesEnabled: false,
       onTap: (_) => viewModel.questList.value = null,
       onMapCreated: _onMapCreated,
       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{

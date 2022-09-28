@@ -99,9 +99,7 @@ flutter:
     - assets/entrance_background.jpg
     - assets/google_logo.png
     - assets/currency.png
-    - assets/themes/theme1.json
-    - assets/themes/theme2.json
-    - assets/themes/theme3.json
+    - assets/map_theme.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

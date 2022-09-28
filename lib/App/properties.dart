@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:peanut/Services/authentication_service.dart';
-import 'package:peanut/Ui/MainPages/peanut_map.dart';
+import 'package:peanut/Ui/Map/peanut_map.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
 class Properties {

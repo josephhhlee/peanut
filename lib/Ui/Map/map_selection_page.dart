@@ -13,7 +13,7 @@ import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
-import 'package:peanut/Ui/MainPages/add_quest_page.dart';
+import 'package:peanut/Ui/Map/add_quest_page.dart';
 import 'dart:developer';
 import 'package:peanut/Utils/loading_utils.dart';
 
@@ -238,6 +238,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
 
   Widget _backBtn() => FloatingActionButton(
         mini: true,
+        tooltip: "Back",
         onPressed: _onBack,
         backgroundColor: PeanutTheme.almostBlack.withOpacity(0.8),
         child: const Icon(Icons.arrow_back, color: PeanutTheme.primaryColor),
@@ -368,9 +369,11 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
         physics: const BouncingScrollPhysics(),
         shrinkWrap: true,
         itemCount: list.length,
-        itemBuilder: (_, index) => InkWell(
-          onTap: () async => await _onAddrSelect(list[index]),
-          child: Container(
+        itemBuilder: (_, index) => Material(
+          child: InkWell(
+            highlightColor: PeanutTheme.primaryColor.withOpacity(0.5),
+            onTap: () async => await _onAddrSelect(list[index]),
+            child: Container(
               key: Key(list[index]),
               width: double.infinity,
               decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider, width: 0.5))),
@@ -378,7 +381,9 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
               child: EasyRichText(
                 list[index],
                 patternList: patternList,
-              )),
+              ),
+            ),
+          ),
         ),
       ),
     );

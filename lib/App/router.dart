@@ -10,8 +10,9 @@ import 'package:peanut/Ui/General/no_network_page.dart';
 import 'package:peanut/Ui/General/page_not_found_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Ui/Global/home_page.dart';
-import 'package:peanut/Ui/MainPages/add_quest_page.dart';
-import 'package:peanut/Ui/MainPages/map_selection_page.dart';
+import 'package:peanut/Ui/Map/add_quest_page.dart';
+import 'package:peanut/Ui/Map/map_selection_page.dart';
+import 'package:peanut/Ui/Map/quest_page.dart';
 import 'package:peanut/Utils/animation_utils.dart';
 import 'package:velocity_x/velocity_x.dart';
 
@@ -45,6 +46,7 @@ class PeanutRouter {
       AddQuestPage.routeName: (_, __) => PeanutPage(child: const AddQuestPage(), pageName: AddQuestPage.routeName, transition: _fabTransition),
       VerifyPage.routeName: (_, arg) => PeanutPage(child: VerifyPage(arg), pageName: VerifyPage.routeName),
       MapSelectionPage.routeName: (_, arg) => PeanutPage(child: MapSelectionPage(arg), pageName: MapSelectionPage.routeName),
+      QuestPage.routeName: (_, arg) => PeanutPage(child: QuestPage(arg), pageName: QuestPage.routeName),
     };
   }
 

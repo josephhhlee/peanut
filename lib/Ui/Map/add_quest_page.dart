@@ -6,7 +6,7 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Models/quest_model.dart';
-import 'package:peanut/Ui/MainPages/map_selection_page.dart';
+import 'package:peanut/Ui/Map/map_selection_page.dart';
 import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/Utils/text_utils.dart';
 
