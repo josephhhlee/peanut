@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -113,4 +111,32 @@ class CommonUtils {
           size: size,
         ),
       );
+
+  static String getDateTimeAgo(int timestamp) {
+    var now = DateTime.now();
+    var inputDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    var diff = now.difference(inputDate);
+
+    if ((now.year == inputDate.year && now.month == inputDate.month) || diff.inDays < 31) {
+      if (diff.inSeconds < 60) {
+        return "Just now";
+      } else if (diff.inMinutes < 60) {
+        return "${diff.inMinutes} ${diff.inMinutes == 1 ? "min" : "mins"} ago";
+      } else if (diff.inHours < 24) {
+        return "${diff.inHours} ${diff.inHours == 1 ? "hr" : "hrs"} ago";
+      } else if (diff.inDays < 7) {
+        return "${diff.inDays} ${diff.inDays == 1 ? "day" : "days"} ago";
+      } else {
+        int weeks = diff.inDays ~/ 7;
+        return "$weeks ${weeks == 1 ? "week" : "weeks"} ago";
+      }
+    } else if (now.year == inputDate.year || diff.inDays < 365) {
+      double avgDaysInAMonth = 30.437;
+      num months = now.year == inputDate.year ? now.month - inputDate.month : diff.inDays / avgDaysInAMonth;
+      return "$months ${months == 1 ? "month" : "months"} ago";
+    } else {
+      int years = now.year - inputDate.year;
+      return "$years ${years == 1 ? "year" : "years"} ago";
+    }
+  }
 }

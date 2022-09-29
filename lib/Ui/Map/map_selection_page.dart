@@ -229,19 +229,22 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
             ],
           ),
           Positioned(
-            top: 30,
-            left: 10,
+            top: 50,
+            left: 20,
             child: _backBtn(),
           ),
         ],
       );
 
-  Widget _backBtn() => FloatingActionButton(
-        mini: true,
-        tooltip: "Back",
-        onPressed: _onBack,
-        backgroundColor: PeanutTheme.almostBlack.withOpacity(0.8),
-        child: const Icon(Icons.arrow_back, color: PeanutTheme.primaryColor),
+  Widget _backBtn() => Container(
+        decoration: BoxDecoration(
+          color: PeanutTheme.almostBlack.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: BackButton(
+          onPressed: _onBack,
+          color: PeanutTheme.white,
+        ),
       );
 
   Widget _map() => SizedBox(

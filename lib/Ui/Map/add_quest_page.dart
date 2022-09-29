@@ -106,6 +106,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _floatingBtn(),
+      backgroundColor: PeanutTheme.backGroundColor,
       appBar: AppBar(title: const Text("Create Quest")),
       body: KeyboardDismissOnTap(
         dismissOnCapturedTaps: true,

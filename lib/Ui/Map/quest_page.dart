@@ -8,7 +8,6 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
-import 'package:intl/intl.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Utils/common_utils.dart';
 import 'dart:developer';
@@ -28,7 +27,6 @@ class _QuestPageState extends State<QuestPage> {
   late GoogleMapController? _mapController;
   late final NutUser _user;
   late final Quest _quest;
-  late final String _createdOn;
 
   bool _buttonPressed = false;
 
@@ -36,7 +34,6 @@ class _QuestPageState extends State<QuestPage> {
   void initState() {
     _user = widget.args[0];
     _quest = widget.args[1];
-    _createdOn = DateFormat.yMMMMEEEEd().format(DateTime.fromMillisecondsSinceEpoch(_quest.createdOn!));
     super.initState();
   }
 
@@ -105,21 +102,13 @@ class _QuestPageState extends State<QuestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _floatingBtn(),
-      appBar: AppBar(
-        elevation: 0,
-        title: Text("${_user.uid == DataStore().currentUser!.uid ? "My" : "${_user.displayName}'s"} Quest"),
-        leading: BackButton(onPressed: _onBack),
-        actions: [
-          IconButton(
-            onPressed: () => false,
-            icon: const Icon(Icons.share),
-            tooltip: "Share",
-          )
-        ],
+      body: SizedBox(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        child: _body(),
       ),
-      body: _body(),
     );
   }
 
@@ -139,50 +128,77 @@ class _QuestPageState extends State<QuestPage> {
           ),
         );
 
-  Widget _body() => Padding(
-        padding: const EdgeInsets.all(20),
-        child: ListView(
-          physics: const BouncingScrollPhysics(),
-          children: [
-            _created(),
-            const SizedBox(height: 20),
-            _title(),
-            const SizedBox(height: 20),
-            _mapContainer(),
-            const SizedBox(height: 20),
-            _reward(),
-            const SizedBox(height: 20),
-            _objective(),
-            SizedBox(height: _user.uid == DataStore().currentUser!.uid ? 20 : 75),
-          ],
-        ),
+  Widget _body() => Column(
+        children: [
+          _mapContainer(),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              physics: const BouncingScrollPhysics(),
+              shrinkWrap: true,
+              children: [
+                _header(),
+                const SizedBox(height: 10),
+                _reward(),
+                const SizedBox(height: 20),
+                _objective(),
+                SizedBox(height: _user.uid == DataStore().currentUser!.uid ? 20 : 75),
+              ],
+            ),
+          ),
+        ],
       );
 
-  Widget _created() => Text(
-        _createdOn,
-        style: const TextStyle(color: PeanutTheme.grey, fontWeight: FontWeight.bold),
+  Widget _header() => Row(
+        children: [
+          Expanded(child: _title()),
+          CommonUtils.buildUserImage(context: context, user: _user),
+        ],
       );
 
-  Widget _title() => Text(
-        _quest.title!,
-        style: const TextStyle(color: PeanutTheme.almostBlack, fontSize: 24, fontWeight: FontWeight.bold),
+  Widget _title() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _quest.title!,
+            style: const TextStyle(color: PeanutTheme.almostBlack, fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  "By ${_user.uid == DataStore().currentUser!.uid ? "Me" : _user.displayName}",
+                  style: const TextStyle(color: PeanutTheme.grey, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 20),
+              const Icon(
+                Icons.access_time_rounded,
+                color: PeanutTheme.grey,
+                size: 15,
+              ),
+              Text(
+                CommonUtils.getDateTimeAgo(_quest.createdOn!),
+                style: const TextStyle(color: PeanutTheme.grey),
+              ),
+            ],
+          ),
+        ],
       );
 
   Widget _mapContainer() => ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: AspectRatio(
-            aspectRatio: 4 / 3.5,
-            child: Stack(
-              children: [
-                _map(),
-                Positioned(
-                  bottom: 0,
-                  child: _address(),
-                ),
-              ],
-            ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.5,
+          width: double.infinity,
+          child: Stack(
+            children: [
+              _map(),
+              Positioned(bottom: 0, child: _address()),
+              Positioned(top: 50, left: 20, child: _backBtn()),
+              Positioned(top: 50, right: 20, child: _shareBtn()),
+            ],
           ),
         ),
       );
@@ -210,18 +226,44 @@ class _QuestPageState extends State<QuestPage> {
   Widget _address() => Container(
         width: MediaQuery.of(context).size.width,
         padding: const EdgeInsets.all(20),
-        color: PeanutTheme.backGroundColor,
+        decoration: BoxDecoration(
+          color: PeanutTheme.almostBlack,
+          borderRadius: BorderRadius.circular(30),
+        ),
         child: Row(
           children: [
-            const Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack, size: 14),
+            const Icon(Icons.location_on_rounded, color: PeanutTheme.primaryColor, size: 14),
             const SizedBox(width: 5),
             Expanded(
               child: Text(
                 _quest.mapModel!.addr,
-                style: const TextStyle(color: PeanutTheme.almostBlack),
+                style: const TextStyle(color: PeanutTheme.white),
               ),
             ),
           ],
+        ),
+      );
+
+  Widget _backBtn() => Container(
+        decoration: BoxDecoration(
+          color: PeanutTheme.almostBlack.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: BackButton(
+          onPressed: _onBack,
+          color: PeanutTheme.white,
+        ),
+      );
+
+  Widget _shareBtn() => Container(
+        decoration: BoxDecoration(
+          color: PeanutTheme.almostBlack.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: IconButton(
+          tooltip: "Share",
+          icon: const Icon(Icons.share, color: PeanutTheme.secondaryColor),
+          onPressed: () => false,
         ),
       );
 
@@ -232,7 +274,14 @@ class _QuestPageState extends State<QuestPage> {
             style: TextStyle(color: PeanutTheme.almostBlack, fontSize: 15, fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 5),
-          CommonUtils.peanutCurrency(value: _quest.rewards.toString()),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: PeanutTheme.almostBlack.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: CommonUtils.peanutCurrency(value: _quest.rewards.toString(), color: PeanutTheme.primaryColor),
+          ),
         ],
       );
 

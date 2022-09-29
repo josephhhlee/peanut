@@ -90,8 +90,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       useDefaultLoading: false,
       overlayWidget: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: 5.0,
-          sigmaY: 5.0,
+          sigmaX: 3.0,
+          sigmaY: 3.0,
         ),
         child: CommonUtils.loadingIndicator(),
       ),
