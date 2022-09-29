@@ -1,5 +1,7 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
@@ -7,7 +9,9 @@ import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:intl/intl.dart';
+import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Utils/common_utils.dart';
+import 'dart:developer';
 
 class QuestPage extends StatefulWidget {
   static const routeName = "/quest-page";
@@ -22,15 +26,17 @@ class QuestPage extends StatefulWidget {
 
 class _QuestPageState extends State<QuestPage> {
   late GoogleMapController? _mapController;
-  late final NutUser user;
-  late final Quest quest;
-  late final String createdOn;
+  late final NutUser _user;
+  late final Quest _quest;
+  late final String _createdOn;
+
+  bool _buttonPressed = false;
 
   @override
   void initState() {
-    user = widget.args[0];
-    quest = widget.args[1];
-    createdOn = DateFormat.yMMMMEEEEd().format(DateTime.fromMillisecondsSinceEpoch(quest.createdOn!));
+    _user = widget.args[0];
+    _quest = widget.args[1];
+    _createdOn = DateFormat.yMMMMEEEEd().format(DateTime.fromMillisecondsSinceEpoch(_quest.createdOn!));
     super.initState();
   }
 
@@ -46,6 +52,54 @@ class _QuestPageState extends State<QuestPage> {
         controller.setMapStyle(DataStore().mapTheme);
       });
 
+  Future<void> _onTakeQuest() async {
+    Future<int> calculateRemainingPeanuts() async {
+      final value = await DataStore().currentUser!.getPeanutCurrency();
+      final remainingPeanuts = value - Configs.questDepositCost;
+      return remainingPeanuts;
+    }
+
+    void onError(String msg) {
+      context.loaderOverlay.hide();
+      CommonUtils.toast(context, msg, backgroundColor: PeanutTheme.errorColor);
+      setState(() => _buttonPressed = false);
+    }
+
+    if (_buttonPressed) return;
+    setState(() => _buttonPressed = true);
+
+    context.loaderOverlay.show();
+    await _quest.questIsTaken().then((taken) async {
+      if (!taken) {
+        await calculateRemainingPeanuts().then((reamining) async {
+          if (reamining >= 0) {
+            await FirestoreService.runTransaction((transaction) async {
+              final currentUser = DataStore().currentUser!;
+              _quest.assignTaker(currentUser.uid);
+              await _quest.update(transaction: transaction);
+              await currentUser.updatePeanutCurrency(reamining, transaction: transaction);
+            }).onError((error, _) {
+              log(error.toString());
+              onError("An error has occurred, please try again later.");
+            }).then((_) async {
+              context.loaderOverlay.hide();
+              CommonUtils.toast(context, "Quest has been added to your Quest List");
+              await showOkAlertDialog(
+                context: context,
+                title: "Note",
+                message: "Deposit amount of ${Configs.questDepositCost} Peanut(s) will be returned to you upon quest completion.",
+              ).then((_) => Navigation.pop(context));
+            });
+          } else {
+            onError("Insufficient Peanut(s) to take quest.");
+          }
+        });
+      } else {
+        onError("Quest is taken and no longer available.");
+      }
+    });
+  }
+
   void _onBack() => Navigation.pop(context);
 
   @override
@@ -55,7 +109,7 @@ class _QuestPageState extends State<QuestPage> {
       floatingActionButton: _floatingBtn(),
       appBar: AppBar(
         elevation: 0,
-        title: Text("${user.displayName}'s Quest"),
+        title: Text("${_user.uid == DataStore().currentUser!.uid ? "My" : "${_user.displayName}'s"} Quest"),
         leading: BackButton(onPressed: _onBack),
         actions: [
           IconButton(
@@ -69,11 +123,21 @@ class _QuestPageState extends State<QuestPage> {
     );
   }
 
-  Widget _floatingBtn() => FloatingActionButton.extended(
-        heroTag: "FAB",
-        onPressed: () => false,
-        label: const Text("Take Quest"),
-      );
+  Widget _floatingBtn() => _user.uid == DataStore().currentUser!.uid
+      ? const SizedBox.shrink()
+      : FloatingActionButton.extended(
+          heroTag: "FAB",
+          onPressed: _onTakeQuest,
+          label: Row(
+            children: [
+              const Text("Take Quest"),
+              const SizedBox(width: 10),
+              const Text("(-"),
+              CommonUtils.peanutCurrency(value: Configs.questDepositCost.toString()),
+              const Text(" Deposit)"),
+            ],
+          ),
+        );
 
   Widget _body() => Padding(
         padding: const EdgeInsets.all(20),
@@ -89,18 +153,18 @@ class _QuestPageState extends State<QuestPage> {
             _reward(),
             const SizedBox(height: 20),
             _objective(),
-            const SizedBox(height: 75),
+            SizedBox(height: _user.uid == DataStore().currentUser!.uid ? 20 : 75),
           ],
         ),
       );
 
   Widget _created() => Text(
-        createdOn,
+        _createdOn,
         style: const TextStyle(color: PeanutTheme.grey, fontWeight: FontWeight.bold),
       );
 
   Widget _title() => Text(
-        quest.title!,
+        _quest.title!,
         style: const TextStyle(color: PeanutTheme.almostBlack, fontSize: 24, fontWeight: FontWeight.bold),
       );
 
@@ -127,11 +191,11 @@ class _QuestPageState extends State<QuestPage> {
         markers: {
           Marker(
             markerId: const MarkerId("destination"),
-            position: LatLng(quest.mapModel!.lat, quest.mapModel!.lng),
+            position: LatLng(_quest.mapModel!.lat, _quest.mapModel!.lng),
             icon: BitmapDescriptor.defaultMarker,
           )
         },
-        initialCameraPosition: CameraPosition(target: LatLng(quest.mapModel!.lat, quest.mapModel!.lng), zoom: Configs.mapZoomLevel + 1),
+        initialCameraPosition: CameraPosition(target: LatLng(_quest.mapModel!.lat, _quest.mapModel!.lng), zoom: Configs.mapZoomLevel + 1),
         mapType: MapType.normal,
         myLocationEnabled: true,
         myLocationButtonEnabled: false,
@@ -153,7 +217,7 @@ class _QuestPageState extends State<QuestPage> {
             const SizedBox(width: 5),
             Expanded(
               child: Text(
-                quest.mapModel!.addr,
+                _quest.mapModel!.addr,
                 style: const TextStyle(color: PeanutTheme.almostBlack),
               ),
             ),
@@ -168,7 +232,7 @@ class _QuestPageState extends State<QuestPage> {
             style: TextStyle(color: PeanutTheme.almostBlack, fontSize: 15, fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 5),
-          CommonUtils.peanutCurrency(value: quest.rewards.toString()),
+          CommonUtils.peanutCurrency(value: _quest.rewards.toString()),
         ],
       );
 
@@ -180,7 +244,7 @@ class _QuestPageState extends State<QuestPage> {
             style: TextStyle(color: PeanutTheme.almostBlack, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          Text(quest.description!),
+          Text(_quest.description!),
         ],
       );
 }

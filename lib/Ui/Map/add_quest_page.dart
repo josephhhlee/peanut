@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
@@ -10,7 +11,6 @@ import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/Map/map_selection_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
-import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/Utils/text_utils.dart';
 import 'dart:developer';
 
@@ -33,6 +33,8 @@ class _AddQuestPageState extends State<AddQuestPage> {
   final _questLocationFocus = FocusNode();
   final _titleFocus = FocusNode();
   final _quest = Quest.empty();
+
+  bool _buttonPressed = false;
 
   @override
   void initState() {
@@ -57,21 +59,45 @@ class _AddQuestPageState extends State<AddQuestPage> {
         _questLocation.text = location?.addr ?? "";
       });
 
-  Future<bool> _makeDeduction() async {
-    try {
-      final currentUser = DataStore().currentUser;
-      final value = await currentUser!.getPeanutCurrency();
+  Future<void> _onCreatedQuest() async {
+    Future<int> calculateRemainingPeanuts() async {
+      final value = await DataStore().currentUser!.getPeanutCurrency();
       final remainingPeanuts = value - (int.parse(_rewards.text) + Configs.questCreateCost);
+      return remainingPeanuts;
+    }
 
-      if (remainingPeanuts >= 0) {
-        await currentUser.updatePeanutCurrency(remainingPeanuts);
-        return true;
-      }
+    void onError(String msg) {
+      context.loaderOverlay.hide();
+      CommonUtils.toast(context, msg, backgroundColor: PeanutTheme.errorColor);
+      setState(() => _buttonPressed = false);
+    }
 
-      return false;
-    } catch (e) {
-      log(e.toString());
-      return false;
+    if (_buttonPressed) return;
+
+    final form = _formKey.currentState;
+    if (form?.validate() ?? false) {
+      setState(() => _buttonPressed = true);
+
+      context.loaderOverlay.show();
+      await calculateRemainingPeanuts().then((remaining) async {
+        if (remaining >= 0) {
+          await FirestoreService.runTransaction(((transaction) async {
+            form?.save();
+            await _quest.create(transaction: transaction);
+            await DataStore().currentUser!.updatePeanutCurrency(remaining, transaction: transaction);
+          })).onError((error, _) {
+            log(error.toString());
+            onError("An error has occurred, please try again later.");
+          }).then((_) {
+            context.loaderOverlay.hide();
+            CommonUtils.toast(context, "Quest created");
+
+            Navigator.pop(context);
+          });
+        } else {
+          onError("Insufficient Peanut(s) to create quest.");
+        }
+      });
     }
   }
 
@@ -93,22 +119,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
           visible: !isKeyboardVisible,
           child: FloatingActionButton.extended(
             heroTag: "FAB",
-            onPressed: () async {
-              final form = _formKey.currentState;
-              if (form?.validate() ?? false) {
-                await _makeDeduction().then((success) async {
-                  if (success) {
-                    form?.save();
-                    await _quest.create().then((_) {
-                      Navigator.pop(context);
-                    });
-                  } else {
-                    LoadingOverlay.pop();
-                    CommonUtils.toast(context, "Insufficient Peanut(s) to create quest.", backgroundColor: PeanutTheme.errorColor);
-                  }
-                });
-              }
-            },
+            onPressed: _onCreatedQuest,
             label: Row(
               children: [
                 const Icon(Icons.add, color: PeanutTheme.almostBlack),

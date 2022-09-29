@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
   static final _firestore = FirebaseFirestore.instance;
-
+  static final runTransaction = _firestore.runTransaction;
+  
   static final appConfigsCol = _firestore.collection("appConfigs");
   static final usersCol = _firestore.collection("users");
   static final questsCol = _firestore.collection("quests");

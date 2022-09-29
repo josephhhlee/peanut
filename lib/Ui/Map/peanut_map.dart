@@ -15,7 +15,6 @@ import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/Map/quest_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
-import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/ViewModels/peanut_map_viewmodel.dart';
 
 class PeanutMap extends StatefulWidget {
@@ -61,9 +60,10 @@ class _PeanutMapState extends State<PeanutMap> {
     _geohash = geohash;
     final surroundings = [_geohash!, ...GeoHasher().neighbors(_geohash!).keys];
     FirestoreService.questsCol.where("geohash", whereIn: surroundings).where("taker", isEqualTo: null).snapshots().listen((snapshot) {
-      final quests = snapshot.docs.map((e) => Quest.fromSnapshot(e));
+      final quests = snapshot.docs.map((e) => Quest.fromSnapshot(e)).toList();
+      quests.removeWhere((element) => element.taker != null);
       if (_manager != null) {
-        _manager?.setItems(quests.toList());
+        _manager?.setItems(quests);
       } else {
         _manager = ClusterManager<Quest>(quests, _updateMarkers, markerBuilder: viewModel.markerBuilder);
         _manager?.setMapId(_controller!.mapId);
@@ -103,7 +103,7 @@ class _PeanutMapState extends State<PeanutMap> {
           builder: (_, value, __) => value == null
               ? const SizedBox.shrink()
               : ListView.builder(
-                  key: Key(value.map((e) => e.toJson().toString()).toString()),
+                  key: Key(value.map((e) => e.toJson()).toString()),
                   padding: const EdgeInsets.all(0),
                   physics: const BouncingScrollPhysics(),
                   shrinkWrap: true,
@@ -175,7 +175,7 @@ class _PeanutMapState extends State<PeanutMap> {
         alignment: Alignment.center,
         children: [
           _map(),
-          if (!_initMarkers) Loading.loadingIndicator(),
+          if (!_initMarkers) CommonUtils.loadingIndicator(),
           Positioned(
             top: 50,
             right: 10,

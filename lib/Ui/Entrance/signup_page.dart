@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
@@ -13,7 +14,6 @@ import 'package:peanut/Ui/Entrance/onboarding.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Ui/Entrance/verify_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
-import 'package:peanut/Utils/loading_utils.dart';
 import 'package:peanut/Utils/text_utils.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -284,13 +284,13 @@ class _SignUpPageState extends State<SignUpPage> {
           if (!validate!) return;
 
           try {
-            LoadingOverlay.build(context);
+            context.loaderOverlay.show();
             await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text, displayName: _displayNameController.text, signup: true).then((_) {
-              LoadingOverlay.pop();
+              context.loaderOverlay.hide();
               Navigation.push(context, VerifyPage.routeName, args: false);
             });
           } catch (e) {
-            LoadingOverlay.pop();
+            context.loaderOverlay.hide();
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
           }
         },
@@ -337,13 +337,13 @@ class _SignUpPageState extends State<SignUpPage> {
         }
 
         try {
-          LoadingOverlay.build(context);
+          context.loaderOverlay.show();
           await login().then((value) {
-            LoadingOverlay.pop();
+            context.loaderOverlay.hide();
             Navigation.push(context, SplashScreenPage.routeName);
           });
         } catch (e) {
-          LoadingOverlay.pop();
+          context.loaderOverlay.hide();
           CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
         }
       },

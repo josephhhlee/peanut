@@ -14,8 +14,8 @@ import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Ui/Map/add_quest_page.dart';
+import 'package:peanut/Utils/common_utils.dart';
 import 'dart:developer';
-import 'package:peanut/Utils/loading_utils.dart';
 
 class MapSelectionPage extends StatefulWidget {
   static const routeName = "/map-selection";
@@ -247,7 +247,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
   Widget _map() => SizedBox(
         width: double.infinity,
         child: _selectedAddr == null
-            ? Loading.loadingIndicator()
+            ? CommonUtils.loadingIndicator()
             : Stack(
                 alignment: Alignment.center,
                 children: [

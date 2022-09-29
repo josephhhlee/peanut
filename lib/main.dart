@@ -1,7 +1,10 @@
+import 'dart:ui';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
@@ -10,6 +13,7 @@ import 'package:peanut/App/data_store.dart';
 import 'package:peanut/Services/location_service.dart';
 import 'package:peanut/Services/maintenance_service.dart';
 import 'package:peanut/Services/network_service.dart';
+import 'package:peanut/Utils/common_utils.dart';
 import 'package:peanut/firebase_options.dart';
 import 'package:provider/provider.dart';
 
@@ -82,19 +86,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: "Peanut",
-      theme: PeanutTheme.defaultTheme(),
-      darkTheme: PeanutTheme.defaultTheme(),
-      debugShowCheckedModeBanner: false,
-      supportedLocales: const [Locale.fromSubtags(languageCode: 'en', countryCode: 'SG')],
-      routeInformationParser: InformationParser(),
-      routerDelegate: Navigation.navigator,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+    return GlobalLoaderOverlay(
+      useDefaultLoading: false,
+      overlayWidget: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 5.0,
+          sigmaY: 5.0,
+        ),
+        child: CommonUtils.loadingIndicator(),
+      ),
+      switchInCurve: Curves.bounceIn,
+      switchOutCurve: Curves.bounceOut,
+      overlayColor: PeanutTheme.almostBlack,
+      overlayOpacity: 0.5,
+      child: MaterialApp.router(
+        title: "Peanut",
+        theme: PeanutTheme.defaultTheme(),
+        darkTheme: PeanutTheme.defaultTheme(),
+        debugShowCheckedModeBanner: false,
+        supportedLocales: const [Locale.fromSubtags(languageCode: 'en', countryCode: 'SG')],
+        routeInformationParser: InformationParser(),
+        routerDelegate: Navigation.navigator,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+      ),
     );
   }
 }

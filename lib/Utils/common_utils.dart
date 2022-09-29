@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/user_model.dart';
@@ -102,5 +103,14 @@ class CommonUtils {
                 textSize: textSize,
                 iconSize: iconSize,
               ),
+      );
+
+  static Widget loadingIndicator({double size = 30}) => Center(
+        child: LoadingAnimationWidget.discreteCircle(
+          color: PeanutTheme.primaryColor,
+          secondRingColor: PeanutTheme.almostBlack,
+          thirdRingColor: PeanutTheme.secondaryColor,
+          size: size,
+        ),
       );
 }

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
@@ -12,7 +13,6 @@ import 'package:peanut/Ui/Entrance/onboarding.dart';
 import 'package:peanut/Ui/Entrance/signup_page.dart';
 import 'package:peanut/Ui/Entrance/splash_screen_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
-import 'package:peanut/Utils/loading_utils.dart';
 
 class LoginPage extends StatefulWidget {
   static const routeName = "/login";
@@ -256,22 +256,22 @@ class _LoginPageState extends State<LoginPage> {
           if (!validate!) return;
 
           try {
-            LoadingOverlay.build(context);
+            context.loaderOverlay.show();
             if (button == "reset") {
               await AuthenticationService.resetPassword(_resetEmail.text).then((_) async {
-                LoadingOverlay.pop();
+                context.loaderOverlay.hide();
                 _resetEmail.clear();
                 await showOkAlertDialog(context: context, message: "An email will be sent to your registered email shortly\nPlease check your email.");
                 setState(() => _isResetPassword = false);
               });
             } else {
               await AuthenticationService.loginWithEmail(_emailController.text, _passwordController.text).then((_) {
-                LoadingOverlay.pop();
+                context.loaderOverlay.hide();
                 Navigation.push(context, SplashScreenPage.routeName, clear: true);
               });
             }
           } catch (e) {
-            LoadingOverlay.pop();
+            context.loaderOverlay.hide();
             CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
           }
         },
@@ -334,13 +334,13 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         try {
-          LoadingOverlay.build(context);
+          context.loaderOverlay.show();
           await login().then((_) {
-            LoadingOverlay.pop();
+            context.loaderOverlay.hide();
             Navigation.push(context, SplashScreenPage.routeName);
           });
         } catch (e) {
-          LoadingOverlay.pop();
+          context.loaderOverlay.hide();
           CommonUtils.toast(context, e.toString(), backgroundColor: PeanutTheme.errorColor);
         }
       },
