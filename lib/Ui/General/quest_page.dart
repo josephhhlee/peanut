@@ -73,7 +73,7 @@ class _QuestPageState extends State<QuestPage> {
             await FirestoreService.runTransaction((transaction) async {
               final currentUser = DataStore().currentUser!;
               _quest.assignTaker(currentUser.uid);
-              await _quest.update(transaction: transaction);
+              await _quest.update(transaction);
               await currentUser.updatePeanutCurrency(reamining, transaction: transaction);
             }).onError((error, _) {
               log(error.toString());
@@ -104,6 +104,7 @@ class _QuestPageState extends State<QuestPage> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _floatingBtn(),
+      backgroundColor: PeanutTheme.backGroundColor,
       body: SizedBox(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
@@ -112,7 +113,7 @@ class _QuestPageState extends State<QuestPage> {
     );
   }
 
-  Widget _floatingBtn() => _user.uid == DataStore().currentUser!.uid
+  Widget _floatingBtn() => _user.uid == DataStore().currentUser!.uid || _quest.taker != null
       ? const SizedBox.shrink()
       : FloatingActionButton.extended(
           heroTag: "FAB",

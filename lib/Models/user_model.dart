@@ -34,12 +34,12 @@ class NutUser {
       };
 
   Future<int> getPeanutCurrency() async {
-    final doc = await FirestoreService.getPeanutCurrencyDoc(uid).get();
+    final doc = await FirestoreService.peanutCurrencyDoc(uid).get();
     return doc.get("value");
   }
 
   Future<void> updatePeanutCurrency(int value, {Transaction? transaction}) async {
-    final ref = FirestoreService.getPeanutCurrencyDoc(uid);
+    final ref = FirestoreService.peanutCurrencyDoc(uid);
     final data = {"value": value};
     transaction != null ? transaction.update(ref, data) : await ref.update(data);
   }

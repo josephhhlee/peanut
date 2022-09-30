@@ -13,7 +13,7 @@ import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
-import 'package:peanut/Ui/Map/quest_page.dart';
+import 'package:peanut/Ui/General/quest_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 import 'package:peanut/ViewModels/peanut_map_viewmodel.dart';
 

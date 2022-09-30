@@ -17,6 +17,7 @@ class Quest with ClusterItem {
   String? taker;
   int? expiry;
   int? deposit;
+  bool completed = false;
   MapModel? mapModel;
 
   @override
@@ -39,9 +40,10 @@ class Quest with ClusterItem {
     deposit = data["deposit"];
     creator = data["creator"];
     taker = data["taker"];
+    completed = data["completed"] ?? false;
   }
 
-  toJson() => {
+  Map<String, dynamic> toJson() => {
         "id": id,
         "address": mapModel?.addr,
         "latitude": mapModel?.lat,
@@ -55,18 +57,37 @@ class Quest with ClusterItem {
         "deposit": deposit,
         "creator": creator,
         "taker": taker,
+        "completed": completed,
       };
 
-  Future<void> create({Transaction? transaction}) async {
-    final ref = FirestoreService.questsCol.doc();
-    id = ref.id;
+  Map<String, Map> _questListToJson() => {
+        id!: {
+          "address": mapModel?.addr,
+          "title": title,
+          "rewards": rewards,
+          "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn!),
+          "expiry": expiry,
+          "creator": creator,
+          "taker": taker,
+          "completed": completed,
+        },
+      };
+
+  Future<void> create(Transaction transaction) async {
+    final questRef = FirestoreService.questsCol.doc();
+    id = questRef.id;
     createdOn = DateTime.now().millisecondsSinceEpoch;
-    transaction != null ? transaction.set(ref, toJson()) : await ref.set(toJson());
+
+    transaction.set(questRef, toJson());
+    transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _questListToJson(), SetOptions(merge: true));
   }
 
-  Future<void> update({Transaction? transaction}) async {
+  Future<void> update(Transaction transaction) async {
     final ref = FirestoreService.questsCol.doc(id);
-    transaction != null ? transaction.update(ref, toJson()) : await ref.update(toJson());
+
+    transaction.update(ref, toJson());
+    transaction.update(FirestoreService.userQuestListCreatedDoc(creator), _questListToJson());
+    if (taker != null) transaction.set(FirestoreService.userQuestListTakenDoc(taker!), _questListToJson(), SetOptions(merge: true));
   }
 
   Future<bool> questIsTaken() async {

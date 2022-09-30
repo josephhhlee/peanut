@@ -119,8 +119,8 @@ class _LoginPageState extends State<LoginPage> {
               : [
                   _title("Login", "Sign In to Continue"),
                   const SizedBox(height: 45),
-                  _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
-                  _or(),
+                  // _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
+                  // _or(),
                   _textForm("Email", _emailController, _emailFocusNode, _passwordFocusNode),
                   const SizedBox(height: 20),
                   _textForm("Password", _passwordController, _passwordFocusNode, null),

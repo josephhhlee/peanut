@@ -13,7 +13,7 @@ class SplashScreenPage extends StatelessWidget {
 
     final screenSize = MediaQuery.of(context).size;
     final refSize = screenSize.width < screenSize.height ? screenSize.width : screenSize.height;
-    final size = refSize / 3;
+    final size = refSize / 4;
 
     return WillPopScope(
       onWillPop: () async => false,
@@ -24,19 +24,33 @@ class SplashScreenPage extends StatelessWidget {
           width: screenSize.width,
           alignment: Alignment.center,
           color: PeanutTheme.primaryColor,
-          child: Stack(
+          child: Container(
+            height: size,
+            width: size,
             alignment: Alignment.center,
-            children: [
-              Image.asset(
-                "assets/entrance_background.jpg",
-                width: size,
-                height: size,
-              ),
-              const Text(
-                "PEANUT",
-                style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white),
-              ),
-            ],
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(size * 2)),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.asset(
+                  "assets/entrance_background.jpg",
+                  fit: BoxFit.cover,
+                  width: size,
+                  height: size,
+                ),
+                Container(
+                  width: size,
+                  height: size,
+                  color: PeanutTheme.almostBlack.withOpacity(0.3),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "PEANUT",
+                    style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.white, fontSize: 18),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

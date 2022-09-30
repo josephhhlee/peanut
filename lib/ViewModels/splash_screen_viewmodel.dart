@@ -11,6 +11,7 @@ import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Services/location_service.dart';
 import 'package:peanut/Ui/Global/home_page.dart';
+import 'dart:developer';
 
 class SplashScreenViewModel {
   final datastore = DataStore();
@@ -22,6 +23,7 @@ class SplashScreenViewModel {
       await LocationService.init(context);
       await initMapTheme();
       await initCurrentUser();
+      // await _troubleshoot();
       DataStore().setDataInitialized(true);
       Navigation.push(context, HomePage.routeName, clear: true);
     }
@@ -30,4 +32,11 @@ class SplashScreenViewModel {
   Future<void> initCurrentUser() async => datastore.currentUser = NutUser.fromSnapshot(await FirestoreService.usersCol.doc(FirebaseAuth.instance.currentUser!.uid).get());
 
   Future<void> initMapTheme() async => datastore.mapTheme ??= await rootBundle.loadString('assets/map_theme.json');
+
+  // ignore: unused_element
+  Future<void> _troubleshoot() async {
+    try {} catch (e) {
+      log("TROUBLESHOOT ERROR : $e");
+    }
+  }
 }

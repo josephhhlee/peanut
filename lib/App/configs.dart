@@ -30,6 +30,8 @@ class Configs {
   static late String androidSHA1;
   static late String googleAndroidApi;
   static late bool enableSuggestions;
+  static late bool googleSignUp;
+  static late bool appleSignUp;
   static bool pause = false;
 
   static Future<void> initRemoteConfig() async {
@@ -41,6 +43,7 @@ class Configs {
       final maps = Map.from(map["maps"]);
       final android = Map.from(map["android"]);
       final currency = Map.from(map["currency"]);
+      final signUps = Map.from(map["sign_ups"]);
 
       displayNameCharLimit = charLimits["display_name"];
       emailCharLimit = charLimits["email"]!;
@@ -57,6 +60,8 @@ class Configs {
       googleAndroidApi = android["google_api"];
       questCreateCost = currency["create_quest_cost"];
       questDepositCost = currency["quest_taker_deposit"];
+      googleSignUp = signUps["google_sign_up"];
+      appleSignUp = signUps["apple_sign_up"];
     } catch (e) {
       log(e.toString());
       pause = true;

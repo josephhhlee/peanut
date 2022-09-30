@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Map/peanut_map.dart';
+import 'package:peanut/Ui/Quests/quest_list.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
 class Properties {
@@ -42,16 +43,20 @@ class Properties {
   }
 
   static final Map<String, dynamic> _navigationScreens = {
-    "Home": {
+    "Map": {
       "screen": const PeanutMap(),
       "icon": FontAwesomeIcons.mapLocation,
     },
+    // "Quests": {
+    //   "screen": const QuestList(),
+    //   "icon": Icons.task_rounded,
+    // },
     "Profile": {
       "screen": const TextButton(
         onPressed: AuthenticationService.logout,
         child: Text("LOG OUT"),
       ),
-      "icon": Icons.settings,
+      "icon": Icons.person_rounded,
     }
   };
   static List<Widget> get screens => _navigationScreens.values.map<Widget>((e) => e["screen"]).toList();

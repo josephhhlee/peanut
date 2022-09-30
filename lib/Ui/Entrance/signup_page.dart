@@ -101,7 +101,7 @@ class _SignUpPageState extends State<SignUpPage> {
             _title("Sign Up", "Sign Up to Create a New Account"),
             const SizedBox(height: 45),
             _otherSigninOptions(displaySignInsInRow, otherSignIWidth),
-            _or(),
+            if (Configs.googleSignUp || (Platform.isIOS && Configs.appleSignUp)) _or(),
             _textForm("Display Name", _displayNameController, _displayNameFocusNode, _emailFocusNode),
             const SizedBox(height: 20),
             _textForm("Email", _emailController, _emailFocusNode, _passwordFocusNode),
@@ -303,9 +303,12 @@ class _SignUpPageState extends State<SignUpPage> {
     width = !displayInRow ? width : width;
 
     var widgets = [
-      _otherSignin(FontAwesomeIcons.google, "google", width),
       Visibility(
-        visible: Platform.isIOS,
+        visible: Configs.googleSignUp,
+        child: _otherSignin(FontAwesomeIcons.google, "google", width),
+      ),
+      Visibility(
+        visible: Platform.isIOS && Configs.appleSignUp,
         child: _otherSignin(FontAwesomeIcons.apple, "apple", width),
       ),
     ];

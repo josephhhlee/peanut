@@ -83,7 +83,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
         if (remaining >= 0) {
           await FirestoreService.runTransaction(((transaction) async {
             form?.save();
-            await _quest.create(transaction: transaction);
+            await _quest.create(transaction);
             await DataStore().currentUser!.updatePeanutCurrency(remaining, transaction: transaction);
           })).onError((error, _) {
             log(error.toString());
@@ -290,11 +290,11 @@ class PeanutTextFormField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: PeanutTheme.primaryColor),
+          borderSide: const BorderSide(color: PeanutTheme.almostBlack),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: PeanutTheme.secondaryColor),
+          borderSide: const BorderSide(color: PeanutTheme.primaryColor),
         ),
       );
 
@@ -351,6 +351,7 @@ class PeanutTextFormField extends StatelessWidget {
 
   Widget tooltip() => Tooltip(
         message: tooltipMsg,
-        child: Icon(Icons.help, color: PeanutTheme.primaryColor.withOpacity(0.8), size: 19),
+        triggerMode: TooltipTriggerMode.tap,
+        child: Icon(Icons.help, color: PeanutTheme.primaryColor.withOpacity(0.8), size: 23),
       );
 }

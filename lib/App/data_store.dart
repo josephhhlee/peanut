@@ -41,7 +41,7 @@ class DataStore with ChangeNotifier {
   set currentUser(NutUser? user) {
     _currentUser = user;
     if (user != null) {
-      _peanutCurrencyListener = FirestoreService.getPeanutCurrencyDoc(user.uid).snapshots().listen((doc) {
+      _peanutCurrencyListener = FirestoreService.peanutCurrencyDoc(user.uid).snapshots().listen((doc) {
         currentUserPeanutCurrency = doc.get("value");
         notifyListeners();
       });
