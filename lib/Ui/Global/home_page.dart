@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Scaffold(
           extendBody: true,
           floatingActionButton: _floatingBtn(),
-          floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           appBar: const PeanutAppBar(),
           bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
           body: ValueListenableBuilder(

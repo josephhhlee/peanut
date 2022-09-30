@@ -17,8 +17,8 @@ class PeanutNavigationBar extends StatelessWidget {
       valueListenable: Properties.navigationBarIndex,
       builder: (_, value, __) => AnimatedBottomNavigationBar.builder(
         activeIndex: value,
-        gapLocation: GapLocation.end,
-        notchSmoothness: NotchSmoothness.smoothEdge,
+        gapLocation: GapLocation.center,
+        notchSmoothness: NotchSmoothness.softEdge,
         onTap: (index) => Properties.navigationBarIndex.value = index,
         backgroundColor: PeanutTheme.almostBlack,
         borderColor: PeanutTheme.secondaryColor,
@@ -29,7 +29,6 @@ class PeanutNavigationBar extends StatelessWidget {
             message: titles[index],
             child: Icon(
               icons[index],
-              size: 24,
               color: isActive ? PeanutTheme.primaryColor : PeanutTheme.white,
             ),
           );

@@ -47,16 +47,20 @@ class Properties {
       "screen": const PeanutMap(),
       "icon": FontAwesomeIcons.mapLocation,
     },
-    // "Quests": {
-    //   "screen": const QuestList(),
-    //   "icon": Icons.task_rounded,
-    // },
+    "Messenger": {
+      "screen": const QuestList(),
+      "icon": FontAwesomeIcons.solidMessage,
+    },
+    "Quests": {
+      "screen": const QuestList(),
+      "icon": FontAwesomeIcons.listCheck,
+    },
     "Profile": {
       "screen": const TextButton(
         onPressed: AuthenticationService.logout,
         child: Text("LOG OUT"),
       ),
-      "icon": Icons.person_rounded,
+      "icon": FontAwesomeIcons.solidUser,
     }
   };
   static List<Widget> get screens => _navigationScreens.values.map<Widget>((e) => e["screen"]).toList();
