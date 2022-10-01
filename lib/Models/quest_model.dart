@@ -6,41 +6,85 @@ import 'package:peanut/App/data_store.dart';
 import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 
-class Quest with ClusterItem {
+class MiniQuest {
   late final String? id;
   late final int? rewards;
   late final int? createdOn;
   late final String creator;
 
   String? title;
-  String? description;
   String? taker;
   int? expiry;
-  int? deposit;
   bool completed = false;
   MapModel? mapModel;
 
-  @override
-  LatLng get location => LatLng(mapModel!.lat, mapModel!.lng);
+  MiniQuest.empty();
 
-  Quest.empty() {
-    creator = DataStore().currentUser!.uid;
+  MiniQuest.fromMap(String key, Map value) {
+    id = key;
+    mapModel = MapModel(addr: value["address"], lat: value["latitude"], lng: value["longitude"]);
+    title = value["title"];
+    rewards = value["rewards"];
+    createdOn = value["createdOn"]!.millisecondsSinceEpoch;
+    expiry = value["expiry"];
+    creator = value["creator"];
+    taker = value["taker"];
+    completed = value["completed"] ?? false;
   }
 
-  Quest.fromSnapshot(DocumentSnapshot doc) {
+  MiniQuest._fromSnapshot(DocumentSnapshot doc) {
     id = doc.id;
     final data = doc.data() as Map;
 
     mapModel = MapModel(addr: data["address"], lat: data["latitude"], lng: data["longitude"]);
     title = data["title"];
-    description = data["description"];
     rewards = data["rewards"];
     createdOn = data["createdOn"]!.millisecondsSinceEpoch;
     expiry = data["expiry"];
-    deposit = data["deposit"];
     creator = data["creator"];
     taker = data["taker"];
     completed = data["completed"] ?? false;
+  }
+
+  Map<String, Map> _toJson() => {
+        id!: {
+          "address": mapModel?.addr,
+          "latitude": mapModel?.lat,
+          "longitude": mapModel?.lng,
+          "title": title,
+          "rewards": rewards,
+          "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn!),
+          "expiry": expiry,
+          "creator": creator,
+          "taker": taker,
+          "completed": completed,
+        },
+      };
+
+  void _create(Transaction transaction) => transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _toJson(), SetOptions(merge: true));
+
+  void _update(Transaction transaction) {
+    transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _toJson(), SetOptions(merge: true));
+    if (taker != null) transaction.set(FirestoreService.userQuestListTakenDoc(taker!), _toJson(), SetOptions(merge: true));
+  }
+}
+
+class Quest extends MiniQuest with ClusterItem {
+  String? description;
+  int? deposit;
+
+  @override
+  LatLng get location => LatLng(mapModel!.lat, mapModel!.lng);
+
+  Quest.empty() : super.empty() {
+    creator = DataStore().currentUser!.uid;
+  }
+
+  Quest.fromSnapshot(DocumentSnapshot doc) : super._fromSnapshot(doc) {
+    final data = doc.data() as Map;
+
+    description = data["description"];
+    deposit = data["deposit"];
   }
 
   Map<String, dynamic> toJson() => {
@@ -60,34 +104,20 @@ class Quest with ClusterItem {
         "completed": completed,
       };
 
-  Map<String, Map> _questListToJson() => {
-        id!: {
-          "address": mapModel?.addr,
-          "title": title,
-          "rewards": rewards,
-          "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn!),
-          "expiry": expiry,
-          "creator": creator,
-          "taker": taker,
-          "completed": completed,
-        },
-      };
-
   Future<void> create(Transaction transaction) async {
     final questRef = FirestoreService.questsCol.doc();
     id = questRef.id;
     createdOn = DateTime.now().millisecondsSinceEpoch;
 
     transaction.set(questRef, toJson());
-    transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _questListToJson(), SetOptions(merge: true));
+    super._create(transaction);
   }
 
   Future<void> update(Transaction transaction) async {
     final ref = FirestoreService.questsCol.doc(id);
 
     transaction.update(ref, toJson());
-    transaction.update(FirestoreService.userQuestListCreatedDoc(creator), _questListToJson());
-    if (taker != null) transaction.set(FirestoreService.userQuestListTakenDoc(taker!), _questListToJson(), SetOptions(merge: true));
+    super._update(transaction);
   }
 
   Future<bool> questIsTaken() async {

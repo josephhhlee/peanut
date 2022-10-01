@@ -48,6 +48,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Portal(
         child: Scaffold(
           extendBody: true,
+          backgroundColor: PeanutTheme.backGroundColor,
           floatingActionButton: _floatingBtn(),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           appBar: const PeanutAppBar(),

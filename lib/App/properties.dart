@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:peanut/App/theme.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Ui/Map/peanut_map.dart';
 import 'package:peanut/Ui/Quests/quest_list.dart';
@@ -44,18 +45,33 @@ class Properties {
 
   static final Map<String, dynamic> _navigationScreens = {
     "Map": {
+      "appBar": AppBar(),
       "screen": const PeanutMap(),
       "icon": FontAwesomeIcons.mapLocation,
     },
     "Messenger": {
-      "screen": const QuestList(),
+      "appBar": AppBar(
+        title: const Text("Messenger"),
+        automaticallyImplyLeading: false,
+      ),
+      "screen": Container(),
       "icon": FontAwesomeIcons.solidMessage,
     },
     "Quests": {
+      "appBar": AppBar(
+        title: const Text("Quests"),
+        backgroundColor: PeanutTheme.primaryColor,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+      ),
       "screen": const QuestList(),
       "icon": FontAwesomeIcons.listCheck,
     },
     "Profile": {
+      "appBar": AppBar(
+        title: const Text("Profile"),
+        automaticallyImplyLeading: false,
+      ),
       "screen": const TextButton(
         onPressed: AuthenticationService.logout,
         child: Text("LOG OUT"),
@@ -63,6 +79,7 @@ class Properties {
       "icon": FontAwesomeIcons.solidUser,
     }
   };
+  static List<AppBar> get appBars => _navigationScreens.values.map<AppBar>((e) => e["appBar"]).toList();
   static List<Widget> get screens => _navigationScreens.values.map<Widget>((e) => e["screen"]).toList();
   static List<IconData> get icons => _navigationScreens.values.map<IconData>((e) => e["icon"]).toList();
   static List<String> get titles => _navigationScreens.keys.toList();

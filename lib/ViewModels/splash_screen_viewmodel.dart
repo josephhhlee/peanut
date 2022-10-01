@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/router.dart';
+import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/authentication_service.dart';
 import 'package:peanut/Services/firestore_service.dart';
@@ -35,7 +36,13 @@ class SplashScreenViewModel {
 
   // ignore: unused_element
   Future<void> _troubleshoot() async {
-    try {} catch (e) {
+    try {
+      final snapshot = await FirestoreService.questsCol.get();
+      for (final doc in snapshot.docs) {
+        final quest = Quest.fromSnapshot(doc);
+        await FirestoreService.runTransaction((transaction) => quest.update(transaction));
+      }
+    } catch (e) {
       log("TROUBLESHOOT ERROR : $e");
     }
   }
