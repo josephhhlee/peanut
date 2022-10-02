@@ -83,8 +83,8 @@ class _AddQuestPageState extends State<AddQuestPage> {
         if (remaining >= 0) {
           await FirestoreService.runTransaction(((transaction) async {
             form?.save();
-            await _quest.create(transaction);
-            await DataStore().currentUser!.updatePeanutCurrency(remaining, transaction: transaction);
+            _quest.create(transaction);
+            DataStore().currentUser!.updatePeanutCurrency(remaining, transaction);
           })).onError((error, _) {
             log(error.toString());
             onError("An error has occurred, please try again later.");
@@ -103,14 +103,13 @@ class _AddQuestPageState extends State<AddQuestPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: _floatingBtn(),
-      backgroundColor: PeanutTheme.backGroundColor,
-      appBar: AppBar(title: const Text("Create Quest")),
-      body: KeyboardDismissOnTap(
-        dismissOnCapturedTaps: true,
-        child: _body(),
+    return KeyboardDismissOnTap(
+      child: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton: _floatingBtn(),
+        backgroundColor: PeanutTheme.backGroundColor,
+        appBar: AppBar(title: const Text("Create Quest")),
+        body: _body(),
       ),
     );
   }
@@ -120,12 +119,16 @@ class _AddQuestPageState extends State<AddQuestPage> {
           visible: !isKeyboardVisible,
           child: FloatingActionButton.extended(
             heroTag: "FAB",
+            elevation: 0,
             onPressed: _onCreatedQuest,
             label: Row(
               children: [
                 const Icon(Icons.add, color: PeanutTheme.almostBlack),
                 const SizedBox(width: 5),
-                const Text("Create Quest"),
+                const Text(
+                  "Create Quest",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(width: 10),
                 const Text("(-"),
                 CommonUtils.peanutCurrency(value: ((int.tryParse(_rewards.text) ?? 0) + Configs.questCreateCost).toString()),
@@ -164,7 +167,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
   Widget _titleField() => PeanutTextFormField(
         controller: _title,
         focus: _titleFocus,
-        maxLength: Configs.emailCharLimit,
+        maxLength: Configs.questTitleCharLimit,
         nextFocus: _questLocationFocus,
         label: "Quest Title",
         enableTitleCase: true,

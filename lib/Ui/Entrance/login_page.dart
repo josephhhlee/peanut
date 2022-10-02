@@ -57,7 +57,6 @@ class _LoginPageState extends State<LoginPage> {
             body: PeanutTheme.background(
               Center(
                 child: KeyboardDismissOnTap(
-                  dismissOnCapturedTaps: true,
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Container(

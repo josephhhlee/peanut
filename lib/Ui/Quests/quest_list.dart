@@ -1,15 +1,23 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:peanut/App/data_store.dart';
+import 'package:peanut/App/router.dart';
 import 'package:peanut/App/theme.dart';
 import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
+import 'package:peanut/Ui/General/quest_page.dart';
 import 'package:peanut/Utils/common_utils.dart';
 
 class QuestList extends StatelessWidget {
-  const QuestList({super.key});
+  QuestList({super.key});
+
+  final _controller = PageController();
+  final _selectedTab = ValueNotifier(0);
 
   @override
   Widget build(BuildContext context) {
@@ -19,44 +27,55 @@ class QuestList extends StatelessWidget {
         width: double.infinity,
         child: Column(
           children: [
-            _tabs(),
-            Expanded(child: _contents()),
+            _tabs(context),
+            Expanded(child: _contents(context)),
           ],
         ),
       ),
     );
   }
 
-  Widget _tabs() => Row(
+  Widget _tabs(BuildContext context) => Row(
         children: [
-          Expanded(
-            child: Container(
-              height: 50,
-              color: PeanutTheme.primaryColor,
-              alignment: Alignment.center,
-              child: const Text(
-                "Taken",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: PeanutTheme.almostBlack, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Container(
-              height: 50,
-              color: PeanutTheme.primaryColor,
-              alignment: Alignment.center,
-              child: const Text(
-                "Created",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: PeanutTheme.almostBlack, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
+          Expanded(child: _tab("Accepted", 0, context)),
+          Expanded(child: _tab("Created", 1, context)),
         ],
       );
 
-  Widget _contents() => PageView(
+  Widget _tab(String title, int page, BuildContext context) => Container(
+        color: PeanutTheme.primaryColor,
+        child: ValueListenableBuilder(
+          valueListenable: _selectedTab,
+          builder: (_, value, __) => InkWell(
+            onTap: () {
+              _controller.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.fastOutSlowIn);
+              _selectedTab.value = page;
+              FocusScope.of(context).unfocus();
+            },
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: value == page ? PeanutTheme.backGroundColor : PeanutTheme.primaryColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: PeanutTheme.almostBlack, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _contents(BuildContext context) => PageView(
+        scrollDirection: Axis.horizontal,
+        controller: _controller,
+        onPageChanged: (value) {
+          _selectedTab.value = value;
+          FocusScope.of(context).unfocus();
+        },
         physics: const BouncingScrollPhysics(),
         pageSnapping: true,
         children: const [
@@ -78,8 +97,11 @@ class _QuestListTab extends StatefulWidget {
 class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveClientMixin<_QuestListTab> {
   final _searchController = TextEditingController();
   final List<MiniQuest> _questList = [];
+  final List<MiniQuest> _selectedQuestList = [];
+  final List<String> _searchWords = [];
   late final StreamSubscription<DocumentSnapshot> _questListener;
 
+  String _selectedSort = "Recently Created;Descending";
   bool _initialised = false;
 
   @override
@@ -104,10 +126,110 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
 
     _questListener = ref.snapshots().listen((doc) {
       final map = doc.data() as Map;
+      _questList.clear();
+      _selectedQuestList.clear();
       map.forEach((key, value) => _questList.add(MiniQuest.fromMap(key, value)));
+      _selectedQuestList.addAll(_questList);
+      _onSort(_selectedSort);
       _initialised = true;
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _onSearch(String text) async {
+    if (text.isEmpty) return _onClearSearch();
+
+    _selectedQuestList.clear();
+    _searchWords.clear();
+    _searchWords.addAll(text.trim().replaceAll(",", "").toLowerCase().split(" "));
+
+    for (MiniQuest quest in _questList) {
+      final user = await DataStore().getUser(widget.tab == "taken" ? quest.creator : quest.taker);
+      final searchable = "${user?.displayName ?? ""} ${quest.mapModel!.addr} ${quest.title}";
+      final searchableWords = searchable.trim().replaceAll(",", "").toLowerCase().split(" ");
+
+      if (_searchWords.every((search) => searchableWords.any((searchable) => search == searchable))) _selectedQuestList.add(quest);
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  void _onClearSearch() {
+    _searchWords.clear();
+    _searchController.clear();
+    _selectedQuestList.clear();
+    _selectedQuestList.addAll(_questList);
+
+    if (mounted) setState(() {});
+  }
+
+  void _onSort(String selectedSort) {
+    _selectedSort = selectedSort;
+    _buildComparator();
+    _questList.sort(_buildComparator());
+    _selectedQuestList.sort(_buildComparator());
+    if (mounted) setState(() {});
+  }
+
+  int Function(MiniQuest, MiniQuest)? _buildComparator() {
+    final isAsc = _selectedSort.split(";")[1].contains("Asc");
+
+    double dist(MiniQuest quest) {
+      final currentUserLocation = DataStore().locationData!;
+      return Geolocator.distanceBetween(currentUserLocation.latitude!, currentUserLocation.longitude!, quest.mapModel!.lat, quest.mapModel!.lng);
+    }
+
+    if (_selectedSort.contains("Recently Created")) {
+      return (a, b) {
+        int compare = isAsc ? a.createdOn.compareTo(b.createdOn) : b.createdOn.compareTo(a.createdOn);
+        if (compare != 0) return compare;
+        int compare2 = (b.takenOn ?? 0).compareTo((a.takenOn ?? 0));
+        if (compare2 != 0) return compare2;
+        int compare3 = dist(a).compareTo(dist(b));
+        if (compare3 != 0) return compare2;
+        return b.rewards.compareTo(a.rewards);
+      };
+    } else if (_selectedSort.contains("Recently Taken")) {
+      return (a, b) {
+        int compare = isAsc ? (a.takenOn ?? 0).compareTo((b.takenOn ?? 0)) : (b.takenOn ?? 0).compareTo((a.takenOn ?? 0));
+        if (compare != 0) return compare;
+        int compare2 = b.createdOn.compareTo(a.createdOn);
+        if (compare2 != 0) return compare2;
+        int compare3 = dist(a).compareTo(dist(b));
+        if (compare3 != 0) return compare2;
+        return b.rewards.compareTo(a.rewards);
+      };
+    } else if (_selectedSort.contains("Distance")) {
+      return (a, b) {
+        int compare = isAsc ? dist(a).compareTo(dist(b)) : dist(b).compareTo(dist(a));
+        if (compare != 0) return compare;
+        int compare2 = b.createdOn.compareTo(a.createdOn);
+        if (compare2 != 0) return compare2;
+        int compare3 = (b.takenOn ?? 0).compareTo((a.takenOn ?? 0));
+        if (compare3 != 0) return compare2;
+        return b.rewards.compareTo(a.rewards);
+      };
+    } else if (_selectedSort.contains("Rewards")) {
+      return (a, b) {
+        int compare = isAsc ? a.rewards.compareTo(b.rewards) : b.rewards.compareTo(a.rewards);
+        if (compare != 0) return compare;
+        int compare2 = b.createdOn.compareTo(a.createdOn);
+        if (compare2 != 0) return compare2;
+        int compare3 = (b.takenOn ?? 0).compareTo((a.takenOn ?? 0));
+        if (compare3 != 0) return compare2;
+        return dist(a).compareTo(dist(b));
+      };
+    } else {
+      return (a, b) {
+        int compare = b.createdOn.compareTo(a.createdOn);
+        if (compare != 0) return compare;
+        int compare2 = (b.takenOn ?? 0).compareTo((a.takenOn ?? 0));
+        if (compare2 != 0) return compare2;
+        int compare3 = dist(a).compareTo(dist(b));
+        if (compare3 != 0) return compare2;
+        return b.rewards.compareTo(a.rewards);
+      };
+    }
   }
 
   @override
@@ -121,9 +243,24 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          _searchBar(),
+          Row(
+            children: [
+              Expanded(child: _searchBar()),
+              IconButton(
+                onPressed: () async {
+                  FocusScope.of(context).unfocus();
+                  await _SortingSheet(context: context, onSort: _onSort, selectedSort: _selectedSort).push();
+                },
+                splashRadius: 20,
+                icon: const Icon(
+                  FontAwesomeIcons.sort,
+                  color: PeanutTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
-          Expanded(child: _questListContents()),
+          Flexible(child: _questListContents()),
         ],
       ),
     );
@@ -139,7 +276,7 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
           child: TextField(
             autofocus: false,
             controller: _searchController,
-            onChanged: (String text) {},
+            onChanged: (value) async => await _onSearch(value),
             decoration: InputDecoration(
               border: InputBorder.none,
               isDense: true,
@@ -147,7 +284,7 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
               suffixIcon: Visibility(
                 visible: _searchController.text.isNotEmpty,
                 child: IconButton(
-                  onPressed: () => _searchController.clear(),
+                  onPressed: _onClearSearch,
                   icon: const Icon(Icons.clear),
                 ),
               ),
@@ -159,67 +296,408 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
   Widget _questListContents() => ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: ListView.builder(
+          key: Key(_selectedQuestList.map((e) => e.id).toString()),
           scrollDirection: Axis.vertical,
-          physics: const BouncingScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _questList.length,
-          itemBuilder: (context, index) => _questCard(_questList[index], index),
+          itemCount: _selectedQuestList.length,
+          itemBuilder: (context, index) => _questCard(_selectedQuestList[index], index),
         ),
       );
 
-  Widget _questCard(MiniQuest quest, int index) => CachedUserData(
-        key: Key(quest.id!),
-        uid: quest.creator,
-        builder: (user) => Material(
-          child: InkWell(
-            highlightColor: PeanutTheme.primaryColor.withOpacity(0.5),
-            onTap: () => false,
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.backGroundColor, width: 3))),
-              child: Row(
+  Widget _questCard(MiniQuest quest, int index) {
+    Widget main(NutUser? user) => Container(
+          padding: const EdgeInsets.all(10),
+          decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.backGroundColor, width: 3))),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CommonUtils.buildUserImage(context: context, user: user, size: 65),
+                  CommonUtils.userImage(context: context, user: user, size: 65),
                   const SizedBox(width: 15),
                   Flexible(fit: FlexFit.tight, child: _questDetails(quest, user)),
                 ],
               ),
-            ),
+              if (widget.tab == "created" && quest.taker != null) _takerDetails(quest),
+            ],
+          ),
+        );
+
+    Widget statusLabel() {
+      final visible = (widget.tab == "taken" && quest.status != QuestStatus.taken) || (widget.tab == "created" && quest.status != QuestStatus.untaken);
+
+      return Visibility(
+        visible: visible,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: PeanutTheme.darkOrange,
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(10)),
+          ),
+          padding: const EdgeInsets.all(7),
+          child: Text(
+            quest.status.name,
+            style: const TextStyle(color: PeanutTheme.white, fontWeight: FontWeight.bold, fontSize: 12),
           ),
         ),
       );
+    }
 
-  Widget _questDetails(MiniQuest quest, NutUser user) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            user.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.primaryColor),
-          ),
-          Text(
-            quest.title!,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 5),
-          Row(
+    return Material(
+      key: Key(quest.id),
+      child: CachedUserData(
+        uid: quest.creator,
+        builder: (user) => InkWell(
+          highlightColor: PeanutTheme.primaryColor.withOpacity(0.5),
+          onTap: () => user == null ? false : Navigation.push(context, QuestPage.routeName, args: [user, quest.id]),
+          child: Stack(
+            alignment: Alignment.bottomRight,
             children: [
-              const Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack, size: 14),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  quest.mapModel!.addr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: PeanutTheme.grey),
-                ),
+              main(user),
+              Positioned(
+                bottom: 3,
+                child: statusLabel(),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _questDetails(MiniQuest quest, NutUser? user) {
+    final patternList = _searchWords
+        .map((e) => EasyRichTextPattern(
+              targetString: e,
+              style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.black),
+            ))
+        .toList();
+
+    Widget name() => widget.tab == "created"
+        ? Text(
+            user?.displayName ?? "",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.primaryColor),
+          )
+        : EasyRichText(
+            user?.displayName ?? "",
+            caseSensitive: false,
+            patternList: patternList,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            defaultStyle: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.primaryColor),
+          );
+
+    Widget title() => EasyRichText(
+          quest.title!,
+          caseSensitive: false,
+          patternList: patternList,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+
+    Widget address() => Row(
+          children: [
+            const Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack, size: 14),
+            const SizedBox(width: 5),
+            Expanded(
+              child: EasyRichText(
+                quest.mapModel!.addr,
+                caseSensitive: false,
+                patternList: patternList,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                defaultStyle: const TextStyle(color: PeanutTheme.grey),
+              ),
+            ),
+          ],
+        );
+
+    Widget distance() => Text(
+          CommonUtils.getDistance(quest.mapModel!.lat, quest.mapModel!.lng),
+          style: const TextStyle(color: PeanutTheme.grey),
+        );
+
+    Widget reward() => Row(
+          children: [
+            const Text("Rewards"),
+            const SizedBox(width: 5),
+            Expanded(
+              child: CommonUtils.peanutCurrency(
+                value: quest.rewards.toString(),
+                color: PeanutTheme.primaryColor,
+                textSize: 14,
+                iconSize: 70,
+              ),
+            ),
+          ],
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        name(),
+        title(),
+        const SizedBox(height: 15),
+        address(),
+        distance(),
+        const SizedBox(height: 15),
+        reward(),
+      ],
+    );
+  }
+
+  Widget _takerDetails(MiniQuest quest) {
+    final patternList = _searchWords
+        .map((e) => EasyRichTextPattern(
+              targetString: e,
+              style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.black),
+            ))
+        .toList();
+
+    Widget details(NutUser? user) => Row(
+          children: [
+            CommonUtils.userImage(context: context, user: user, size: 65),
+            const SizedBox(width: 15),
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                EasyRichText(
+                  user?.displayName ?? "",
+                  caseSensitive: false,
+                  patternList: patternList,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  defaultStyle: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.primaryColor),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    backgroundColor: PeanutTheme.primaryColor,
+                    padding: const EdgeInsets.all(10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => false,
+                  child: const Text(
+                    "Message",
+                    style: TextStyle(color: PeanutTheme.almostBlack),
+                  ),
+                ),
+              ],
+            )),
+          ],
+        );
+
+    return CachedUserData(
+      uid: quest.taker!,
+      builder: (user) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              "Quest Taker :",
+              style: TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.almostBlack),
+            ),
+            const SizedBox(height: 10),
+            details(user),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SortingSheet extends StatefulWidget {
+  final BuildContext context;
+  final String selectedSort;
+  final void Function(String selectedSort) onSort;
+
+  const _SortingSheet({required this.context, required this.onSort, required this.selectedSort});
+
+  Future push() async {
+    return await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+      builder: (BuildContext bottomSheetContext) => this,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+      ),
+    );
+  }
+
+  @override
+  __SortingSheetState createState() => __SortingSheetState();
+}
+
+class __SortingSheetState extends State<_SortingSheet> {
+  final List<String> sortingTypes = ["Recently Created;Ascending", "Recently Taken;Ascending", "Distance;Ascending", "Rewards;Ascending"];
+  late List<MiniQuest> list;
+  late String selectedSort;
+
+  @override
+  void initState() {
+    selectedSort = widget.selectedSort;
+
+    if (selectedSort.contains("Desc")) {
+      final sort = selectedSort.split(";")[0];
+      sortingTypes[sortingTypes.indexWhere((sortType) => sortType.contains(sort))] = selectedSort;
+    }
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          title(),
+          Flexible(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 15),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(children: sortingTypes.map((sort) => fieldCard(sort)).toList()),
+                ),
+              ),
+            ),
+          ),
+          buttons(),
         ],
-      );
+      ),
+    );
+  }
+
+  Widget fieldCard(String field) {
+    final sortType = field.split(";");
+    final selected = selectedSort.contains(sortType[0]);
+
+    return GestureDetector(
+      onTap: () async {
+        if (selectedSort.contains(sortType[0]) && field.contains(";")) {
+          var order = sortType[1].contains("Asc") ? "Descending" : "Ascending";
+          selectedSort = "${sortType[0]};$order";
+          sortingTypes[sortingTypes.indexOf(field)] = selectedSort;
+        } else {
+          selectedSort = field;
+        }
+        setState(() {});
+      },
+      child: Container(
+        width: double.infinity,
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: selected ? PeanutTheme.primaryColor.withOpacity(0.15) : null,
+          border: field == sortingTypes[sortingTypes.length - 1] ? null : const Border(bottom: BorderSide(color: PeanutTheme.greyDivider)),
+        ),
+        child: Row(
+          children: [
+            Text(
+              sortType[0],
+              style: const TextStyle(color: Colors.black, fontSize: 15),
+            ),
+            const Spacer(),
+            Visibility(
+              visible: selected && field.contains(";"),
+              child: Icon(
+                field.contains(";") && sortType[1].contains("Asc") ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
+                color: PeanutTheme.primaryColor,
+              ),
+            ),
+            Text(
+              selected && field.contains(";") ? sortType[1] : "",
+              style: const TextStyle(color: PeanutTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget title() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 30, left: 25, bottom: 20),
+      child: const Text(
+        "Sort By",
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget buttons() {
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(child: clearBtn()),
+          const SizedBox(width: 10),
+          Expanded(child: applyBtn()),
+        ],
+      ),
+    );
+  }
+
+  Widget clearBtn() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: PeanutTheme.primaryColor,
+          side: const BorderSide(color: PeanutTheme.greyDivider),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          padding: const EdgeInsets.all(20)),
+      onPressed: () async {
+        Navigator.pop(context);
+        selectedSort = "Recently Created;Descending";
+        widget.onSort(selectedSort);
+      },
+      child: Container(
+        alignment: Alignment.center,
+        child: const Text(
+          "Reset",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Widget applyBtn() {
+    return ElevatedButton(
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(PeanutTheme.primaryColor),
+        padding: MaterialStateProperty.all(const EdgeInsets.all(20)),
+        shape: MaterialStateProperty.all(
+          const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(16.0),
+            ),
+          ),
+        ),
+      ),
+      onPressed: () async {
+        Navigator.pop(context);
+        widget.onSort(selectedSort);
+      },
+      child: Container(
+        alignment: Alignment.center,
+        child: const Text(
+          "Apply",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
 }

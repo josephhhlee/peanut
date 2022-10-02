@@ -25,9 +25,8 @@ class PeanutMap extends StatefulWidget {
 }
 
 class _PeanutMapState extends State<PeanutMap> {
-  final viewModel = PeanutMapViewModel();
+  final _viewModel = PeanutMapViewModel();
   GoogleMapController? _controller;
-  ClusterManager<Quest>? _manager;
   Set<Marker> _markers = {};
   String? _geohash;
   bool _initMarkers = false;
@@ -62,11 +61,11 @@ class _PeanutMapState extends State<PeanutMap> {
     FirestoreService.questsCol.where("geohash", whereIn: surroundings).where("taker", isEqualTo: null).snapshots().listen((snapshot) {
       final quests = snapshot.docs.map((e) => Quest.fromSnapshot(e)).toList();
       quests.removeWhere((element) => element.taker != null);
-      if (_manager != null) {
-        _manager?.setItems(quests);
+      if (_viewModel.manager != null) {
+        _viewModel.manager?.setItems(quests);
       } else {
-        _manager = ClusterManager<Quest>(quests, _updateMarkers, markerBuilder: viewModel.markerBuilder);
-        _manager?.setMapId(_controller!.mapId);
+        _viewModel.manager = ClusterManager<Quest>(quests, _updateMarkers, markerBuilder: _viewModel.markerBuilder);
+        _viewModel.manager?.setMapId(_controller!.mapId);
       }
     });
   }
@@ -79,7 +78,8 @@ class _PeanutMapState extends State<PeanutMap> {
   void _onMapCreated(GoogleMapController controller) {
     _controller = controller;
     controller.setMapStyle(DataStore().mapTheme);
-    if (_manager != null) _manager?.setMapId(controller.mapId);
+    if (_viewModel.manager != null) _viewModel.manager?.setMapId(controller.mapId);
+    if (mounted) setState(() {});
   }
 
   @override
@@ -87,7 +87,11 @@ class _PeanutMapState extends State<PeanutMap> {
     return PortalTarget(
       visible: true,
       portalFollower: _overLay(),
-      anchor: Aligned.center,
+      anchor: const Aligned(
+        target: Alignment.bottomCenter,
+        follower: Alignment.bottomCenter,
+        offset: Offset(0, -100),
+      ),
       child: _body(),
     );
   }
@@ -96,32 +100,31 @@ class _PeanutMapState extends State<PeanutMap> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8, maxHeight: MediaQuery.of(context).size.height * 0.8),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9, maxHeight: MediaQuery.of(context).size.height * 0.4),
         color: PeanutTheme.backGroundColor,
         child: ValueListenableBuilder(
-          valueListenable: viewModel.questList,
-          builder: (_, value, __) => value == null
-              ? const SizedBox.shrink()
-              : ListView.builder(
-                  key: Key(value.map((e) => e.toJson()).toString()),
-                  padding: const EdgeInsets.all(0),
-                  physics: const BouncingScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: value.length,
-                  itemBuilder: (context, index) => _questCard(value[index]),
-                ),
-        ),
+            valueListenable: _viewModel.questList,
+            builder: (_, value, __) => value == null
+                ? const SizedBox.shrink()
+                : ListView.builder(
+                    key: Key(value.map((e) => e.toJson()).toString()),
+                    padding: const EdgeInsets.all(0),
+                    physics: const BouncingScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: value.length,
+                    itemBuilder: (context, index) => _questCard(value[index]),
+                  )),
       ),
     );
   }
 
   Widget _questCard(Quest quest) => CachedUserData(
-        key: Key(quest.id!),
+        key: Key(quest.id),
         uid: quest.creator,
         builder: (user) => Material(
           child: InkWell(
             highlightColor: PeanutTheme.primaryColor.withOpacity(0.5),
-            onTap: () => Navigation.push(context, QuestPage.routeName, args: [user, quest]),
+            onTap: () => user == null ? false : Navigation.push(context, QuestPage.routeName, args: [user, quest]),
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: PeanutTheme.greyDivider))),
@@ -129,7 +132,7 @@ class _PeanutMapState extends State<PeanutMap> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CommonUtils.buildUserImage(context: context, user: user, size: 65),
+                  CommonUtils.userImage(context: context, user: user, size: 65),
                   const SizedBox(width: 15),
                   Flexible(fit: FlexFit.tight, child: _questDetails(quest, user)),
                 ],
@@ -139,37 +142,71 @@ class _PeanutMapState extends State<PeanutMap> {
         ),
       );
 
-  Widget _questDetails(Quest quest, NutUser user) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            user.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.primaryColor),
-          ),
-          Text(
-            quest.title!,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              const Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack, size: 14),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  quest.mapModel!.addr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: PeanutTheme.grey),
-                ),
+  Widget _questDetails(Quest quest, NutUser? user) {
+    Widget name() => Text(
+          user?.displayName ?? "",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: PeanutTheme.darkOrange),
+        );
+
+    Widget title() => Text(
+          quest.title!,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+
+    Widget address() => Row(
+          children: [
+            const Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack, size: 14),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(
+                quest.mapModel!.addr,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: PeanutTheme.grey),
               ),
-            ],
-          ),
-        ],
-      );
+            ),
+          ],
+        );
+
+    Widget distance() => Text(
+          CommonUtils.getDistance(quest.mapModel!.lat, quest.mapModel!.lng),
+          style: const TextStyle(color: PeanutTheme.grey),
+        );
+
+    Widget reward() => Row(
+          children: [
+            const Text(
+              "Rewards",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 5),
+            Expanded(
+              child: CommonUtils.peanutCurrency(
+                value: quest.rewards.toString(),
+                color: PeanutTheme.primaryColor,
+                textSize: 14,
+                iconSize: 70,
+              ),
+            ),
+          ],
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        name(),
+        title(),
+        const SizedBox(height: 15),
+        address(),
+        distance(),
+        const SizedBox(height: 15),
+        reward(),
+      ],
+    );
+  }
 
   Widget _body() => Stack(
         alignment: Alignment.center,
@@ -197,6 +234,7 @@ class _PeanutMapState extends State<PeanutMap> {
     final lng = location?.longitude;
 
     return GoogleMap(
+      padding: _controller == null ? EdgeInsets.zero : const EdgeInsets.only(top: 100),
       initialCameraPosition: CameraPosition(target: LatLng(lat!, lng!), zoom: Configs.mapZoomLevel),
       markers: _markers,
       mapType: MapType.normal,
@@ -208,8 +246,15 @@ class _PeanutMapState extends State<PeanutMap> {
       zoomControlsEnabled: false,
       scrollGesturesEnabled: false,
       tiltGesturesEnabled: false,
-      onTap: (_) => viewModel.questList.value = null,
+      buildingsEnabled: false,
+      indoorViewEnabled: false,
+      liteModeEnabled: false,
+      mapToolbarEnabled: false,
+      trafficEnabled: false,
+      onTap: (_) => _viewModel.clearSelectedMarker(),
       onMapCreated: _onMapCreated,
+      onCameraMove: _viewModel.manager?.onCameraMove,
+      onCameraIdle: _viewModel.manager?.updateMap,
       gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
         Factory<OneSequenceGestureRecognizer>(
           () => EagerGestureRecognizer(),

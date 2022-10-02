@@ -7,15 +7,16 @@ import 'package:peanut/Models/map_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 
 class MiniQuest {
-  late final String? id;
-  late final int? rewards;
-  late final int? createdOn;
+  late final String id;
+  late final int rewards;
+  late final int createdOn;
   late final String creator;
 
+  QuestStatus status = QuestStatus.untaken;
   String? title;
   String? taker;
   int? expiry;
-  bool completed = false;
+  int? takenOn;
   MapModel? mapModel;
 
   MiniQuest.empty();
@@ -25,11 +26,12 @@ class MiniQuest {
     mapModel = MapModel(addr: value["address"], lat: value["latitude"], lng: value["longitude"]);
     title = value["title"];
     rewards = value["rewards"];
-    createdOn = value["createdOn"]!.millisecondsSinceEpoch;
+    createdOn = value["createdOn"].millisecondsSinceEpoch;
+    takenOn = value["takenOn"]?.millisecondsSinceEpoch;
     expiry = value["expiry"];
     creator = value["creator"];
     taker = value["taker"];
-    completed = value["completed"] ?? false;
+    status = QuestStatus.values.firstWhere((element) => element.name == value["status"]);
   }
 
   MiniQuest._fromSnapshot(DocumentSnapshot doc) {
@@ -39,33 +41,33 @@ class MiniQuest {
     mapModel = MapModel(addr: data["address"], lat: data["latitude"], lng: data["longitude"]);
     title = data["title"];
     rewards = data["rewards"];
-    createdOn = data["createdOn"]!.millisecondsSinceEpoch;
+    createdOn = data["createdOn"].millisecondsSinceEpoch;
+    takenOn = data["takenOn"]?.millisecondsSinceEpoch;
     expiry = data["expiry"];
     creator = data["creator"];
     taker = data["taker"];
-    completed = data["completed"] ?? false;
+    status = QuestStatus.values.firstWhere((element) => element.name == data["status"]);
   }
 
-  Map<String, Map> _toJson() => {
-        id!: {
-          "address": mapModel?.addr,
-          "latitude": mapModel?.lat,
-          "longitude": mapModel?.lng,
-          "title": title,
-          "rewards": rewards,
-          "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn!),
-          "expiry": expiry,
-          "creator": creator,
-          "taker": taker,
-          "completed": completed,
-        },
+  Map<String, dynamic> _toJson() => {
+        "address": mapModel?.addr,
+        "latitude": mapModel?.lat,
+        "longitude": mapModel?.lng,
+        "title": title,
+        "rewards": rewards,
+        "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn),
+        "takenOn": takenOn == null ? null : DateTime.fromMillisecondsSinceEpoch(takenOn!),
+        "expiry": expiry,
+        "creator": creator,
+        "taker": taker,
+        "status": status.name,
       };
 
-  void _create(Transaction transaction) => transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _toJson(), SetOptions(merge: true));
+  void _create(Transaction transaction) => transaction.set(FirestoreService.userQuestListCreatedDoc(creator), {id: _toJson()}, SetOptions(merge: true));
 
   void _update(Transaction transaction) {
-    transaction.set(FirestoreService.userQuestListCreatedDoc(creator), _toJson(), SetOptions(merge: true));
-    if (taker != null) transaction.set(FirestoreService.userQuestListTakenDoc(taker!), _toJson(), SetOptions(merge: true));
+    transaction.set(FirestoreService.userQuestListCreatedDoc(creator), {id: _toJson()}, SetOptions(merge: true));
+    if (taker != null) transaction.set(FirestoreService.userQuestListTakenDoc(taker!), {id: _toJson()}, SetOptions(merge: true));
   }
 }
 
@@ -85,26 +87,22 @@ class Quest extends MiniQuest with ClusterItem {
 
     description = data["description"];
     deposit = data["deposit"];
+
+    DataStore().addQuestCache(this);
   }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "address": mapModel?.addr,
-        "latitude": mapModel?.lat,
-        "longitude": mapModel?.lng,
-        "geohash": mapModel?.geohash,
-        "title": title,
-        "description": description,
-        "rewards": rewards,
-        "createdOn": DateTime.fromMillisecondsSinceEpoch(createdOn!),
-        "expiry": expiry,
-        "deposit": deposit,
-        "creator": creator,
-        "taker": taker,
-        "completed": completed,
-      };
+  Map<String, dynamic> toJson() {
+    final map = super._toJson();
+    map.addAll({
+      "id": id,
+      "geohash": mapModel?.geohash,
+      "description": description,
+      "deposit": deposit,
+    });
+    return map;
+  }
 
-  Future<void> create(Transaction transaction) async {
+  void create(Transaction transaction) {
     final questRef = FirestoreService.questsCol.doc();
     id = questRef.id;
     createdOn = DateTime.now().millisecondsSinceEpoch;
@@ -113,7 +111,7 @@ class Quest extends MiniQuest with ClusterItem {
     super._create(transaction);
   }
 
-  Future<void> update(Transaction transaction) async {
+  void update(Transaction transaction) {
     final ref = FirestoreService.questsCol.doc(id);
 
     transaction.update(ref, toJson());
@@ -127,6 +125,27 @@ class Quest extends MiniQuest with ClusterItem {
 
   void assignTaker(String uid) {
     taker = uid;
+    status = QuestStatus.taken;
+    takenOn = DateTime.now().millisecondsSinceEpoch;
     deposit = Configs.questDepositCost;
   }
+}
+
+class CacheQuest {
+  final Quest quest;
+  final int timestamp;
+
+  const CacheQuest({required this.quest, required this.timestamp});
+}
+
+enum QuestStatus {
+  untaken,
+  taken,
+  completed,
+  expired,
+  forfeited,
+}
+
+extension QuestStatusExtension on QuestStatus {
+  String get name => toString().split('.').last;
 }

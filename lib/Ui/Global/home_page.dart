@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_portal/flutter_portal.dart';
 import 'package:peanut/App/properties.dart';
 import 'package:peanut/App/router.dart';
@@ -46,18 +47,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return WillPopScope(
       onWillPop: () => Properties.onBack(context),
       child: Portal(
-        child: Scaffold(
-          extendBody: true,
-          backgroundColor: PeanutTheme.backGroundColor,
-          floatingActionButton: _floatingBtn(),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-          appBar: const PeanutAppBar(),
-          bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
-          body: ValueListenableBuilder(
-            valueListenable: Properties.navigationBarIndex,
-            builder: (_, value, __) => FadeIndexedStack(
-              index: value,
-              children: Properties.screens,
+        child: KeyboardDismissOnTap(
+          child: Scaffold(
+            extendBody: true,
+            backgroundColor: PeanutTheme.backGroundColor,
+            floatingActionButton: _floatingBtn(),
+            floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+            appBar: const PeanutAppBar(),
+            bottomNavigationBar: PeanutNavigationBar(_borderRadiusAnimation),
+            body: ValueListenableBuilder(
+              valueListenable: Properties.navigationBarIndex,
+              builder: (_, value, __) => FadeIndexedStack(
+                index: value,
+                children: Properties.screens,
+              ),
             ),
           ),
         ),

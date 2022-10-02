@@ -192,13 +192,12 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: _floatingBtn(),
-      body: KeyboardDismissOnTap(
-        dismissOnCapturedTaps: false,
-        child: _body(),
+    return KeyboardDismissOnTap(
+      child: Scaffold(
+        key: _scaffoldKey,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: _floatingBtn(),
+        body: _body(),
       ),
     );
   }
@@ -208,12 +207,16 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
           visible: !isKeyboardVisible,
           child: FloatingActionButton.extended(
             heroTag: "FAB",
+            elevation: 0,
             onPressed: _onSubmit,
             label: Row(
               children: const [
                 Icon(Icons.location_on_rounded, color: PeanutTheme.almostBlack),
                 SizedBox(width: 10),
-                Text("Confirm Location"),
+                Text(
+                  "Confirm Location",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ),
@@ -264,6 +267,11 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
                     rotateGesturesEnabled: false,
                     tiltGesturesEnabled: false,
                     zoomControlsEnabled: false,
+                    buildingsEnabled: false,
+                    indoorViewEnabled: false,
+                    liteModeEnabled: false,
+                    mapToolbarEnabled: false,
+                    trafficEnabled: false,
                     onMapCreated: _onMapCreated,
                     onCameraMove: _onCameraMove,
                     gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
@@ -383,6 +391,7 @@ class _MapSelectionPageState extends State<MapSelectionPage> {
               padding: const EdgeInsets.all(20),
               child: EasyRichText(
                 list[index],
+                caseSensitive: false,
                 patternList: patternList,
               ),
             ),

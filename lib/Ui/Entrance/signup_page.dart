@@ -65,7 +65,6 @@ class _SignUpPageState extends State<SignUpPage> {
             body: PeanutTheme.background(
               Center(
                 child: KeyboardDismissOnTap(
-                  dismissOnCapturedTaps: true,
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Container(

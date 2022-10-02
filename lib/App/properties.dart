@@ -64,7 +64,7 @@ class Properties {
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
-      "screen": const QuestList(),
+      "screen": QuestList(),
       "icon": FontAwesomeIcons.listCheck,
     },
     "Profile": {

@@ -40,7 +40,12 @@ class SplashScreenViewModel {
       final snapshot = await FirestoreService.questsCol.get();
       for (final doc in snapshot.docs) {
         final quest = Quest.fromSnapshot(doc);
-        await FirestoreService.runTransaction((transaction) => quest.update(transaction));
+        quest.status = quest.taker != null ? QuestStatus.taken : QuestStatus.untaken;
+        if (quest.taker != null && quest.takenOn == null) quest.takenOn = DateTime.now().millisecondsSinceEpoch;
+        await doc.reference.set(quest.toJson());
+        await FirestoreService.runTransaction((transaction) async {
+          quest.update(transaction);
+        });
       }
     } catch (e) {
       log("TROUBLESHOOT ERROR : $e");

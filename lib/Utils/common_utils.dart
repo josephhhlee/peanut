@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:peanut/App/data_store.dart';
 import 'package:peanut/App/theme.dart';
@@ -43,7 +44,17 @@ class CommonUtils {
     );
   }
 
-  static Widget buildUserImage({required BuildContext context, required NutUser user, double size = 65, bool allowGesture = true}) {
+  static Widget userImage({required BuildContext context, required NutUser? user, double size = 65, bool allowGesture = true}) {
+    if (user == null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.4),
+        child: SizedBox(
+          height: size,
+          width: size,
+        ),
+      );
+    }
+
     final color = Color(user.uid.hashCode * 0xffffffff).withOpacity(1).withAlpha(255);
     Widget backGround({required Widget child}) => ClipRRect(
           borderRadius: BorderRadius.circular(size * 0.4),
@@ -79,7 +90,7 @@ class CommonUtils {
     );
   }
 
-  static peanutCurrency({String? value, double iconSize = 55, double textSize = 18, Color color = PeanutTheme.almostBlack}) => Row(children: [
+  static peanutCurrency({required String? value, double iconSize = 55, double textSize = 18, Color color = PeanutTheme.almostBlack}) => Row(children: [
         Text(
           value ?? "0",
           style: TextStyle(color: color, fontSize: textSize, fontWeight: FontWeight.bold),
@@ -138,5 +149,12 @@ class CommonUtils {
       int years = now.year - inputDate.year;
       return "$years ${years == 1 ? "year" : "years"} ago";
     }
+  }
+
+  static String getDistance(double lat, double lng) {
+    final currentUserLocation = DataStore().locationData!;
+    final meters = Geolocator.distanceBetween(currentUserLocation.latitude!, currentUserLocation.longitude!, lat, lng);
+    final kilometers = meters / 1000;
+    return kilometers < 1 ? "${meters.toStringAsFixed(0)}m" : "${kilometers.toStringAsFixed(1)}km";
   }
 }

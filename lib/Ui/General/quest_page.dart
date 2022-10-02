@@ -27,13 +27,14 @@ class _QuestPageState extends State<QuestPage> {
   late GoogleMapController? _mapController;
   late final NutUser _user;
   late final Quest _quest;
+  late final LatLngBounds _mapBounds;
 
   bool _buttonPressed = false;
+  bool _initialised = false;
 
   @override
   void initState() {
-    _user = widget.args[0];
-    _quest = widget.args[1];
+    _init();
     super.initState();
   }
 
@@ -42,6 +43,19 @@ class _QuestPageState extends State<QuestPage> {
     _mapController?.dispose();
     _mapController = null;
     super.dispose();
+  }
+
+  Future<void> _init() async {
+    _user = widget.args[0];
+    _quest = widget.args[1] is String ? await DataStore().getQuest(widget.args[1]) : widget.args[1];
+
+    final lat = _quest.mapModel!.lat;
+    final lng = _quest.mapModel!.lng;
+    const offset = 0.01;
+    _mapBounds = LatLngBounds(northeast: LatLng(lat + offset, lng + offset), southwest: LatLng(lat - offset, lng - offset));
+
+    _initialised = true;
+    if (mounted) setState(() {});
   }
 
   void _onMapCreated(GoogleMapController controller) => setState(() {
@@ -73,8 +87,8 @@ class _QuestPageState extends State<QuestPage> {
             await FirestoreService.runTransaction((transaction) async {
               final currentUser = DataStore().currentUser!;
               _quest.assignTaker(currentUser.uid);
-              await _quest.update(transaction);
-              await currentUser.updatePeanutCurrency(reamining, transaction: transaction);
+              _quest.update(transaction);
+              currentUser.updatePeanutCurrency(reamining, transaction);
             }).onError((error, _) {
               log(error.toString());
               onError("An error has occurred, please try again later.");
@@ -101,6 +115,8 @@ class _QuestPageState extends State<QuestPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_initialised) return CommonUtils.loadingIndicator();
+
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _floatingBtn(),
@@ -117,10 +133,14 @@ class _QuestPageState extends State<QuestPage> {
       ? const SizedBox.shrink()
       : FloatingActionButton.extended(
           heroTag: "FAB",
+          elevation: 0,
           onPressed: _onTakeQuest,
           label: Row(
             children: [
-              const Text("Take Quest"),
+              const Text(
+                "Take Quest",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(width: 10),
               const Text("(-"),
               CommonUtils.peanutCurrency(value: Configs.questDepositCost.toString()),
@@ -139,7 +159,7 @@ class _QuestPageState extends State<QuestPage> {
               shrinkWrap: true,
               children: [
                 _header(),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 _reward(),
                 const SizedBox(height: 20),
                 _objective(),
@@ -152,41 +172,73 @@ class _QuestPageState extends State<QuestPage> {
 
   Widget _header() => Row(
         children: [
-          Expanded(child: _title()),
-          CommonUtils.buildUserImage(context: context, user: _user),
+          Expanded(child: _headerDetails()),
+          CommonUtils.userImage(context: context, user: _user),
         ],
       );
 
-  Widget _title() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _quest.title!,
-            style: const TextStyle(color: PeanutTheme.almostBlack, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  "By ${_user.uid == DataStore().currentUser!.uid ? "Me" : _user.displayName}",
-                  style: const TextStyle(color: PeanutTheme.grey, fontWeight: FontWeight.bold),
+  Widget _headerDetails() {
+    Widget title() => Text(
+          _quest.title!,
+          style: const TextStyle(color: PeanutTheme.almostBlack, fontSize: 24, fontWeight: FontWeight.bold),
+        );
+
+    Widget createdBy() => Text(
+          "By ${_user.uid == DataStore().currentUser!.uid ? "Me" : _user.displayName}",
+          style: const TextStyle(color: PeanutTheme.grey, fontWeight: FontWeight.bold),
+        );
+
+    Widget messageBtn() => Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: PeanutTheme.primaryColor,
+              padding: const EdgeInsets.all(10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => false,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(
+                  Icons.message_rounded,
+                  color: PeanutTheme.almostBlack,
+                  size: 16,
                 ),
-              ),
-              const SizedBox(width: 20),
-              const Icon(
-                Icons.access_time_rounded,
-                color: PeanutTheme.grey,
-                size: 15,
-              ),
-              Text(
-                CommonUtils.getDateTimeAgo(_quest.createdOn!),
-                style: const TextStyle(color: PeanutTheme.grey),
-              ),
-            ],
+                SizedBox(width: 5),
+                Text(
+                  "Contact Quest Giver",
+                  style: TextStyle(color: PeanutTheme.almostBlack, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
-        ],
-      );
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        title(),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Flexible(child: createdBy()),
+            const SizedBox(width: 20),
+            const Icon(
+              Icons.access_time_rounded,
+              color: PeanutTheme.grey,
+              size: 15,
+            ),
+            Text(
+              CommonUtils.getDateTimeAgo(_quest.createdOn),
+              style: const TextStyle(color: PeanutTheme.grey),
+            ),
+          ],
+        ),
+        if (_user.uid != DataStore().currentUser!.uid) messageBtn(),
+      ],
+    );
+  }
 
   Widget _mapContainer() => ClipRRect(
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
@@ -212,15 +264,22 @@ class _QuestPageState extends State<QuestPage> {
             icon: BitmapDescriptor.defaultMarker,
           )
         },
-        initialCameraPosition: CameraPosition(target: LatLng(_quest.mapModel!.lat, _quest.mapModel!.lng), zoom: Configs.mapZoomLevel + 1),
+        initialCameraPosition: CameraPosition(target: LatLng(_quest.mapModel!.lat, _quest.mapModel!.lng), zoom: Configs.mapZoomLevel + 2),
+        minMaxZoomPreference: MinMaxZoomPreference(Configs.mapZoomLevel, 19),
+        cameraTargetBounds: CameraTargetBounds(_mapBounds),
         mapType: MapType.normal,
         myLocationEnabled: true,
+        zoomGesturesEnabled: true,
+        scrollGesturesEnabled: true,
         myLocationButtonEnabled: false,
-        zoomGesturesEnabled: false,
-        scrollGesturesEnabled: false,
         rotateGesturesEnabled: false,
         tiltGesturesEnabled: false,
         zoomControlsEnabled: false,
+        buildingsEnabled: false,
+        indoorViewEnabled: false,
+        liteModeEnabled: false,
+        mapToolbarEnabled: false,
+        trafficEnabled: false,
         onMapCreated: _onMapCreated,
       );
 

@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
 import 'package:peanut/App/configs.dart';
 import 'package:peanut/App/properties.dart';
+import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,24 +71,23 @@ class DataStore with ChangeNotifier {
 
   void addLocationListener(Function(LocationData? location) function) => addListener(() => function(locationData));
 
-  Map<String, CacheUser> userCache = {};
-  Future<NutUser?> getUser(String? uid, {bool fromDB = false}) async {
-    void addUserCache(NutUser user) {
-      final cacheUser = CacheUser(user: user, timestamp: DateTime.now().millisecondsSinceEpoch);
-      userCache[uid!] = cacheUser;
-    }
+  final Map<String, CacheUser> _userCache = {};
+  void addUserCache(NutUser user) {
+    final cacheUser = CacheUser(user: user, timestamp: DateTime.now().millisecondsSinceEpoch);
+    _userCache[cacheUser.user.uid] = cacheUser;
+  }
 
+  Future<NutUser?> getUser(String? uid, {bool fromDB = false}) async {
     Future<NutUser> fetchFromDB() async {
       final doc = await FirestoreService.usersCol.doc(uid).get();
       final user = NutUser.fromSnapshot(doc);
-      if (uid != currentUser!.uid) addUserCache(user);
       return user;
     }
 
     Future<NutUser> fetchFromCache() async {
       if (uid == currentUser!.uid) return currentUser!;
 
-      var cacheUser = userCache[uid];
+      var cacheUser = _userCache[uid];
       if (cacheUser == null) {
         return await fetchFromDB();
       } else {
@@ -98,6 +98,44 @@ class DataStore with ChangeNotifier {
     }
 
     if (uid == null || uid.isEmpty) return null;
+
+    try {
+      if (fromDB) {
+        return await fetchFromDB();
+      } else {
+        return await fetchFromCache();
+      }
+    } catch (e) {
+      log(e.toString());
+      return null;
+    }
+  }
+
+  final Map<String, CacheQuest> _questCache = {};
+  void addQuestCache(Quest quest) {
+    final cacheQuest = CacheQuest(quest: quest, timestamp: DateTime.now().millisecondsSinceEpoch);
+    _questCache[cacheQuest.quest.id] = cacheQuest;
+  }
+
+  Future<Quest?> getQuest(String? id, {bool fromDB = false}) async {
+    Future<Quest> fetchFromDB() async {
+      final doc = await FirestoreService.questsCol.doc(id).get();
+      final quest = Quest.fromSnapshot(doc);
+      return quest;
+    }
+
+    Future<Quest> fetchFromCache() async {
+      var cacheQuest = _questCache[id];
+      if (cacheQuest == null) {
+        return await fetchFromDB();
+      } else {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final isExpired = (now - cacheQuest.timestamp) > Configs.cacheExpiry;
+        return isExpired ? await fetchFromDB() : cacheQuest.quest;
+      }
+    }
+
+    if (id == null || id.isEmpty) return null;
 
     try {
       if (fromDB) {
@@ -163,7 +201,7 @@ class SecureStorage {
 
 class CachedUserData extends StatefulWidget {
   final String uid;
-  final Widget Function(NutUser user) builder;
+  final Widget Function(NutUser? user) builder;
   final Widget? placeHolder;
 
   const CachedUserData({super.key, required this.uid, required this.builder, this.placeHolder});
@@ -174,14 +212,10 @@ class CachedUserData extends StatefulWidget {
 
 class _CachedUserDataState extends State<CachedUserData> {
   NutUser? user;
-  bool initialized = false;
-  late Widget placeHolder;
 
   @override
   void initState() {
-    placeHolder = widget.placeHolder ?? const SizedBox.shrink();
     initialize().whenComplete(() {
-      initialized = true;
       if (mounted) setState(() {});
     });
     super.initState();
@@ -191,6 +225,6 @@ class _CachedUserDataState extends State<CachedUserData> {
 
   @override
   Widget build(BuildContext context) {
-    return initialized && user != null ? widget.builder(user!) : placeHolder;
+    return user != null || widget.placeHolder == null ? widget.builder(user) : widget.placeHolder!;
   }
 }

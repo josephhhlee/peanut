@@ -70,7 +70,12 @@ class AuthenticationService {
           email: email.toLowerCase(),
           createdOn: DateTime.now().millisecondsSinceEpoch,
         );
-        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.runTransaction(
+          (transaction) async {
+            nutUser.create(transaction);
+            nutUser.updatePeanutCurrency(1000, transaction);
+          },
+        );
         await _auth.currentUser?.sendEmailVerification();
       } else {
         await _auth.signInWithEmailAndPassword(email: email, password: password);
@@ -107,7 +112,12 @@ class AuthenticationService {
           verified: true,
           createdOn: DateTime.now().millisecondsSinceEpoch,
         );
-        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.runTransaction(
+          (transaction) async {
+            nutUser.create(transaction);
+            nutUser.updatePeanutCurrency(1000, transaction);
+          },
+        );
       }
 
       log("Logged In with - ${user.uid}");
@@ -139,7 +149,12 @@ class AuthenticationService {
           verified: true,
           createdOn: DateTime.now().millisecondsSinceEpoch,
         );
-        await FirestoreService.usersCol.doc(nutUser.uid).set(nutUser.toJson());
+        await FirestoreService.runTransaction(
+          (transaction) async {
+            nutUser.create(transaction);
+            nutUser.updatePeanutCurrency(1000, transaction);
+          },
+        );
       }
 
       log("Logged In with - ${user.uid}");

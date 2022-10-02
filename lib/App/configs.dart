@@ -19,6 +19,7 @@ class Configs {
   static late int emailCharLimit;
   static late int passwordCharLimit;
   static late int descriptionCharLimit;
+  static late int questTitleCharLimit;
   static late int verificationResendTimer;
   static late int geohashPrecision;
   static late int cacheExpiry;
@@ -49,6 +50,7 @@ class Configs {
       emailCharLimit = charLimits["email"]!;
       passwordCharLimit = charLimits["password"]!;
       descriptionCharLimit = charLimits["description"];
+      questTitleCharLimit = charLimits["quest_title"];
       verificationResendTimer = timers["verification_resend"];
       cacheExpiry = (timers["cache_expiry_in_minutes"] * 60000);
       mapZoomLevel = maps["zoom"].toDouble();
