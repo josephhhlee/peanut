@@ -192,9 +192,10 @@ class _QuestPageState extends State<QuestPage> {
           padding: const EdgeInsets.only(top: 10),
           child: TextButton(
             style: TextButton.styleFrom(
+              elevation: 3,
               backgroundColor: PeanutTheme.primaryColor,
-              padding: const EdgeInsets.all(10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
             ),
             onPressed: () => false,
             child: Row(

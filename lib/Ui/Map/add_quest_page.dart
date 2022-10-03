@@ -105,43 +105,44 @@ class _AddQuestPageState extends State<AddQuestPage> {
   Widget build(BuildContext context) {
     return KeyboardDismissOnTap(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         floatingActionButton: _floatingBtn(),
         backgroundColor: PeanutTheme.backGroundColor,
-        appBar: AppBar(title: const Text("Create Quest")),
+        appBar: AppBar(
+          title: const Text("Create Quest"),
+          elevation: 0,
+          backgroundColor: PeanutTheme.primaryColor,
+        ),
         body: _body(),
       ),
     );
   }
 
-  Widget _floatingBtn() => KeyboardVisibilityBuilder(
-        builder: (_, isKeyboardVisible) => Visibility(
-          visible: !isKeyboardVisible,
-          child: FloatingActionButton.extended(
-            heroTag: "FAB",
-            elevation: 0,
-            onPressed: _onCreatedQuest,
-            label: Row(
-              children: [
-                const Icon(Icons.add, color: PeanutTheme.almostBlack),
-                const SizedBox(width: 5),
-                const Text(
-                  "Create Quest",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 10),
-                const Text("(-"),
-                CommonUtils.peanutCurrency(value: ((int.tryParse(_rewards.text) ?? 0) + Configs.questCreateCost).toString()),
-                const Text(")"),
-              ],
+  Widget _floatingBtn() => FloatingActionButton.extended(
+        heroTag: "FAB",
+        elevation: 0,
+        onPressed: _onCreatedQuest,
+        label: Row(
+          children: [
+            const Icon(Icons.add, color: PeanutTheme.almostBlack),
+            const SizedBox(width: 5),
+            const Text(
+              "Create Quest",
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-          ),
+            const SizedBox(width: 10),
+            const Text("(-"),
+            CommonUtils.peanutCurrency(value: ((int.tryParse(_rewards.text) ?? 0) + Configs.questCreateCost).toString()),
+            const Text(")"),
+          ],
         ),
       );
 
   Widget _body() => Form(
         key: _formKey,
         child: Container(
+          height: MediaQuery.of(context).size.height,
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -153,12 +154,7 @@ class _AddQuestPageState extends State<AddQuestPage> {
               _rewardsField(),
               const SizedBox(height: 20),
               Expanded(child: _descriptionField()),
-              KeyboardVisibilityBuilder(
-                builder: (_, isKeyboardVisible) => Visibility(
-                  visible: !isKeyboardVisible,
-                  child: const SizedBox(height: 75),
-                ),
-              ),
+              const SizedBox(height: 65),
             ],
           ),
         ),

@@ -220,12 +220,9 @@ class _LoginPageState extends State<LoginPage> {
         border: const OutlineInputBorder(),
         labelText: hint,
         suffixIcon: suffixIcon,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
       ),
       onFieldSubmitted: (term) {
         focus?.unfocus();

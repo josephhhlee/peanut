@@ -11,7 +11,9 @@ import 'package:peanut/Models/quest_model.dart';
 import 'package:peanut/Models/user_model.dart';
 import 'package:peanut/Services/firestore_service.dart';
 import 'package:peanut/Ui/General/quest_page.dart';
+import 'package:peanut/Ui/Quests/sorting.dart';
 import 'package:peanut/Utils/common_utils.dart';
+import 'package:peanut/Utils/scroll_utils.dart';
 
 class QuestList extends StatelessWidget {
   QuestList({super.key});
@@ -246,17 +248,7 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
           Row(
             children: [
               Expanded(child: _searchBar()),
-              IconButton(
-                onPressed: () async {
-                  FocusScope.of(context).unfocus();
-                  await _SortingSheet(context: context, onSort: _onSort, selectedSort: _selectedSort).push();
-                },
-                splashRadius: 20,
-                icon: const Icon(
-                  FontAwesomeIcons.sort,
-                  color: PeanutTheme.primaryColor,
-                ),
-              ),
+              _sortBtn(),
             ],
           ),
           const SizedBox(height: 20),
@@ -265,6 +257,19 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
       ),
     );
   }
+
+  Widget _sortBtn() => IconButton(
+        tooltip: "Sort",
+        onPressed: () async {
+          FocusScope.of(context).unfocus();
+          await SortingSheet(context: context, onSort: _onSort, selectedSort: _selectedSort).push();
+        },
+        splashRadius: 20,
+        icon: const Icon(
+          FontAwesomeIcons.sort,
+          color: PeanutTheme.primaryColor,
+        ),
+      );
 
   Widget _searchBar() => Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -295,12 +300,14 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
 
   Widget _questListContents() => ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: ListView.builder(
-          key: Key(_selectedQuestList.map((e) => e.id).toString()),
-          scrollDirection: Axis.vertical,
-          shrinkWrap: true,
-          itemCount: _selectedQuestList.length,
-          itemBuilder: (context, index) => _questCard(_selectedQuestList[index], index),
+        child: DisableScrollGlow(
+          child: ListView.builder(
+            key: Key(_selectedQuestList.map((e) => e.id).toString()),
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            itemCount: _selectedQuestList.length,
+            itemBuilder: (context, index) => _questCard(_selectedQuestList[index], index),
+          ),
         ),
       );
 
@@ -475,9 +482,10 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
+                    elevation: 3,
                     backgroundColor: PeanutTheme.primaryColor,
-                    padding: const EdgeInsets.all(10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
                   ),
                   onPressed: () => false,
                   child: const Text(
@@ -505,197 +513,6 @@ class __QuestListTabState extends State<_QuestListTab> with AutomaticKeepAliveCl
             const SizedBox(height: 10),
             details(user),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SortingSheet extends StatefulWidget {
-  final BuildContext context;
-  final String selectedSort;
-  final void Function(String selectedSort) onSort;
-
-  const _SortingSheet({required this.context, required this.onSort, required this.selectedSort});
-
-  Future push() async {
-    return await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
-      builder: (BuildContext bottomSheetContext) => this,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-      ),
-    );
-  }
-
-  @override
-  __SortingSheetState createState() => __SortingSheetState();
-}
-
-class __SortingSheetState extends State<_SortingSheet> {
-  final List<String> sortingTypes = ["Recently Created;Ascending", "Recently Taken;Ascending", "Distance;Ascending", "Rewards;Ascending"];
-  late List<MiniQuest> list;
-  late String selectedSort;
-
-  @override
-  void initState() {
-    selectedSort = widget.selectedSort;
-
-    if (selectedSort.contains("Desc")) {
-      final sort = selectedSort.split(";")[0];
-      sortingTypes[sortingTypes.indexWhere((sortType) => sortType.contains(sort))] = selectedSort;
-    }
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          title(),
-          Flexible(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 15),
-              child: Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(children: sortingTypes.map((sort) => fieldCard(sort)).toList()),
-                ),
-              ),
-            ),
-          ),
-          buttons(),
-        ],
-      ),
-    );
-  }
-
-  Widget fieldCard(String field) {
-    final sortType = field.split(";");
-    final selected = selectedSort.contains(sortType[0]);
-
-    return GestureDetector(
-      onTap: () async {
-        if (selectedSort.contains(sortType[0]) && field.contains(";")) {
-          var order = sortType[1].contains("Asc") ? "Descending" : "Ascending";
-          selectedSort = "${sortType[0]};$order";
-          sortingTypes[sortingTypes.indexOf(field)] = selectedSort;
-        } else {
-          selectedSort = field;
-        }
-        setState(() {});
-      },
-      child: Container(
-        width: double.infinity,
-        height: 60,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: BoxDecoration(
-          color: selected ? PeanutTheme.primaryColor.withOpacity(0.15) : null,
-          border: field == sortingTypes[sortingTypes.length - 1] ? null : const Border(bottom: BorderSide(color: PeanutTheme.greyDivider)),
-        ),
-        child: Row(
-          children: [
-            Text(
-              sortType[0],
-              style: const TextStyle(color: Colors.black, fontSize: 15),
-            ),
-            const Spacer(),
-            Visibility(
-              visible: selected && field.contains(";"),
-              child: Icon(
-                field.contains(";") && sortType[1].contains("Asc") ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
-                color: PeanutTheme.primaryColor,
-              ),
-            ),
-            Text(
-              selected && field.contains(";") ? sortType[1] : "",
-              style: const TextStyle(color: PeanutTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget title() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 30, left: 25, bottom: 20),
-      child: const Text(
-        "Sort By",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget buttons() {
-    return Container(
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        children: [
-          Expanded(child: clearBtn()),
-          const SizedBox(width: 10),
-          Expanded(child: applyBtn()),
-        ],
-      ),
-    );
-  }
-
-  Widget clearBtn() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: PeanutTheme.primaryColor,
-          side: const BorderSide(color: PeanutTheme.greyDivider),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          padding: const EdgeInsets.all(20)),
-      onPressed: () async {
-        Navigator.pop(context);
-        selectedSort = "Recently Created;Descending";
-        widget.onSort(selectedSort);
-      },
-      child: Container(
-        alignment: Alignment.center,
-        child: const Text(
-          "Reset",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-
-  Widget applyBtn() {
-    return ElevatedButton(
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(PeanutTheme.primaryColor),
-        padding: MaterialStateProperty.all(const EdgeInsets.all(20)),
-        shape: MaterialStateProperty.all(
-          const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(16.0),
-            ),
-          ),
-        ),
-      ),
-      onPressed: () async {
-        Navigator.pop(context);
-        widget.onSort(selectedSort);
-      },
-      child: Container(
-        alignment: Alignment.center,
-        child: const Text(
-          "Apply",
-          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
     );

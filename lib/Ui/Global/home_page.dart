@@ -50,6 +50,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: KeyboardDismissOnTap(
           child: Scaffold(
             extendBody: true,
+            resizeToAvoidBottomInset: false,
             backgroundColor: PeanutTheme.backGroundColor,
             floatingActionButton: _floatingBtn(),
             floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

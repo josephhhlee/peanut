@@ -52,6 +52,8 @@ class Properties {
     "Messenger": {
       "appBar": AppBar(
         title: const Text("Messenger"),
+        backgroundColor: PeanutTheme.primaryColor,
+        elevation: 0,
         automaticallyImplyLeading: false,
       ),
       "screen": Container(),
@@ -70,6 +72,8 @@ class Properties {
     "Profile": {
       "appBar": AppBar(
         title: const Text("Profile"),
+        backgroundColor: PeanutTheme.primaryColor,
+        elevation: 0,
         automaticallyImplyLeading: false,
       ),
       "screen": const TextButton(
