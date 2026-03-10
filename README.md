@@ -18,17 +18,10 @@ Whether you’re looking for a fun challenge, exploring your city, or creating e
 
 ## 🎨 App Interface
 
-### Explore Quests
-![Peanut Explore Quests](https://github.com/user-attachments/assets/78e14e43-6b9a-45a0-878a-3a4903b89346)
-
-### Quest Details
-![Peanut Quest Details](https://github.com/user-attachments/assets/38d84482-7576-49fe-a531-37ef01a24c8a)
-
-### Create a Quest
-![Peanut Create Quest](https://github.com/user-attachments/assets/2852402a-593a-465f-9c95-5dbf51716394)
-
-### Map Interface
-![Peanut Map Interface](https://github.com/user-attachments/assets/3bdad976-ba89-43ca-b38b-8c80ac4e8ff4)
+https://github.com/user-attachments/assets/78e14e43-6b9a-45a0-878a-3a4903b89346
+https://github.com/user-attachments/assets/38d84482-7576-49fe-a531-37ef01a24c8a
+https://github.com/user-attachments/assets/2852402a-593a-465f-9c95-5dbf51716394
+https://github.com/user-attachments/assets/3bdad976-ba89-43ca-b38b-8c80ac4e8ff4)
 
 ---
 
